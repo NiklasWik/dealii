@@ -2598,17 +2598,25 @@ namespace internal
              "The given array shape_values must not be the null pointer."));
 
     // 13 cases in 2D + 3D for stride, out_stride, blocks1, blocks2
-    constexpr int n_blocks1 =
+    constexpr int n_blocks1 = // TODO lex_faces
       lex_faces ? dealii::Utilities::pow<unsigned int>(n_rows, face_direction) :
                   ((face_direction == normal_direction) ? (n_rows - 1) : 
                     ((face_direction == 0 && normal_direction == 2) ||
-                     (face_direction == 1 && normal_direction == 0) ||
+                     (face_direction == 1 && normal_direction == 2) ||
                      (face_direction == 2 && normal_direction == 1)   ) ? n_rows : (n_rows + 1)
                   );
-    constexpr int n_blocks2 =
+    constexpr int n_blocks2 = // TODO lex_faces
       lex_faces ? dealii::Utilities::pow<unsigned int>(
                     n_rows, std::max(dim - face_direction - 1, 0)) :
-                  (dim > 2 ? n_rows : 1);
+                  ((dim == 2) ? 1 : 
+                    ((face_direction == normal_direction) ? (n_rows - 1) : 
+                      (
+                        ((face_direction == 0 && normal_direction == 1) ||
+                         (face_direction == 1 && normal_direction == 0) ||
+                         (face_direction == 2 && normal_direction == 0)) ? n_rows : (n_rows + 1)
+                      )
+                    )
+                  );
 
     AssertIndexRange(face_direction, dim);
 
@@ -2620,9 +2628,7 @@ namespace internal
                     n_rows)
                 )
               );
-    constexpr int out_stride = (face_direction == normal_direction) ? 
-              Utilities::pow(n_rows-1, dim - 1) : 
-              ((dim == 2) ? n_rows + 1 : (n_rows + 1)*n_rows);
+    constexpr int out_stride = n_blocks1*n_blocks2;
 
     const Number *DEAL_II_RESTRICT shape_values = this->shape_values;
 
@@ -2680,7 +2686,7 @@ namespace internal
                   }
               }
 
-            if (lex_faces)
+            if (lex_faces) // TODO
               {
                 ++out;
                 ++in;
@@ -2703,10 +2709,25 @@ namespace internal
                     // product. Need to take that into account.
                     if (dim == 3)
                       {
-                        if (contract_onto_face)
-                          out += n_rows - 1;
-                        else
-                          in += n_rows - 1;
+                        if (normal_direction == 0){
+                          if (contract_onto_face)
+                            out += n_rows - 1;
+                          else
+                            in += n_rows - 1;
+                        }
+                        if (normal_direction == 1){
+                          if (contract_onto_face)
+                            out += n_rows - 2;
+                          else
+                            in += n_rows - 2;
+                        }
+                        if (normal_direction == 2){
+                          if (contract_onto_face)
+                            out += n_rows;
+                          else
+                            in += n_rows;
+                        }
+                        
                       }
                     break;
                   case 2:
@@ -2717,7 +2738,7 @@ namespace internal
                     Assert(false, ExcNotImplemented());
                 }
           }
-        if (lex_faces)
+        if (lex_faces) // TODO
           {
             if (contract_onto_face)
               in += (dealii::Utilities::pow(n_rows, face_direction + 1) -
@@ -2731,13 +2752,33 @@ namespace internal
             // adjust for local coordinate system zx
             if (contract_onto_face)
               {
-                in += n_rows * (n_rows - 1);
-                out -= n_rows * n_rows - 1;
+                if (normal_direction == 0){
+                  in += (n_rows + 1) * (n_rows - 1);
+                  out -= n_rows * (n_rows + 1) - 1;
+                }
+                if (normal_direction == 1){
+                  in += (n_rows - 1) * (n_rows - 1);
+                  out -= (n_rows - 1) * (n_rows - 1) - 1;
+                }
+                if (normal_direction == 2){
+                  in += (n_rows - 1) * (n_rows);
+                  out -= (n_rows) * (n_rows + 1) - 1;
+                }
               }
             else
               {
-                out += n_rows * (n_rows - 1);
-                in -= n_rows * n_rows - 1;
+                if (normal_direction == 0){
+                  out += (n_rows + 1) * (n_rows - 1);
+                  in -= n_rows * (n_rows + 1) - 1;
+                }
+                if (normal_direction == 1){
+                  out += (n_rows - 1) * (n_rows - 1);
+                  in -= (n_rows - 1) * (n_rows - 1) - 1;
+                }
+                if (normal_direction == 2){
+                  out += (n_rows - 1) * (n_rows);
+                  in -= (n_rows) * (n_rows + 1) - 1;
+                }
               }
           }
       }

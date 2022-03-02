@@ -332,42 +332,42 @@ namespace internal
               shape_values[i * n_q_points_1d + q] =
                 fe.shape_value_component(my_i, q_point, 0);
               shape_gradients[i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[0];
+                fe.shape_grad_component(my_i, q_point, 0)[comp];
               shape_hessians[i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[0][0];
+                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
 
               // evaluate basis functions on the two 1D subfaces (i.e., at the
               // positions divided by one half and shifted by one half,
               // respectively) for hanging nodes 
-              q_point[0] *= 0.5;
+              q_point[comp] *= 0.5;
               values_within_subface[0][i * n_q_points_1d + q] =
                 fe.shape_value_component(my_i, q_point, 0);
               gradients_within_subface[0][i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[0];
+                fe.shape_grad_component(my_i, q_point, 0)[comp];
               hessians_within_subface[0][i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[0][0];
-              q_point[0] += 0.5;
+                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+              q_point[comp] += 0.5;
               values_within_subface[1][i * n_q_points_1d + q] =
                 fe.shape_value_component(my_i, q_point, 0);
               gradients_within_subface[1][i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[0];
+                fe.shape_grad_component(my_i, q_point, 0)[comp];
               hessians_within_subface[1][i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[0][0];
+                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
             }
             // evaluate basis functions on the 1D faces, i.e., in zero and one
             Point<dim> q_point       = unit_point;
-            q_point[0]               = 0;
+            q_point[comp]            = 0;
             shape_data_on_face[0][i] = fe.shape_value_component(my_i, q_point, 0);
             shape_data_on_face[0][i + n_dofs_1d] =
-              fe.shape_grad_component(my_i, q_point, 0)[0];
+              fe.shape_grad_component(my_i, q_point, 0)[comp];
             shape_data_on_face[0][i + 2 * n_dofs_1d] =
-              fe.shape_grad_grad_component(my_i, q_point, 0)[0][0];
-            q_point[0]               = 1;
+              fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+            q_point[comp] = 1; 
             shape_data_on_face[1][i] = fe.shape_value_component(my_i, q_point, 0);
             shape_data_on_face[1][i + n_dofs_1d] =
-              fe.shape_grad_component(my_i, q_point, 0)[0];
+              fe.shape_grad_component(my_i, q_point, 0)[comp];
             shape_data_on_face[1][i + 2 * n_dofs_1d] =
-              fe.shape_grad_grad_component(my_i, q_point, 0)[0][0];
+              fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
           }
 
         }
