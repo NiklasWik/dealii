@@ -246,6 +246,8 @@ namespace internal
       //
       if (dynamic_cast<const FE_RaviartThomasNodal<dim> *>(
           &fe_in.base_element(base_element_number))){
+        
+        element_type = tensor_raviart_thomas;
 
         const auto quad = quad_in.get_tensor_basis()[0];
 
@@ -261,10 +263,15 @@ namespace internal
         if ((fe.n_dofs_per_cell() == 0) || (quad.size() == 0))
             return; // When do we want to check this?
 
+        const unsigned int n_q_points_1d = quad.size();
+
+        n_q_points = Utilities::fixed_power<dim>(n_q_points_1d);
+        n_q_points_face = Utilities::fixed_power<dim - 1>(n_q_points_1d);
+
         dofs_per_component_on_cell = fe_in.n_dofs_per_cell() / n_components;
 
-        // NOTE n_dofs_pre_face is in normal direction! 
-        dofs_per_component_on_face = fe_in.n_dofs_per_face(); 
+        // NOTE dofs_per_component_on_face is in tangential direction! 
+        dofs_per_component_on_face = fe_in.n_dofs_per_face() + fe.degree; 
 
         // To get the right shape_values of the RT element
         std::vector<unsigned int> lex_normal, lex_tangent;
@@ -281,9 +288,11 @@ namespace internal
           UnivariateShapeData<Number> &univariate_shape_data = 
             (comp == 0) ? data.front() : data.back();
 
+          univariate_shape_data.element_type = tensor_raviart_thomas;
+
           univariate_shape_data.quadrature = quad; 
           univariate_shape_data.fe_degree = fe.degree - comp;
-          univariate_shape_data.n_q_points_1d = quad.size();
+          univariate_shape_data.n_q_points_1d = n_q_points_1d;
 
           // grant write access to common univariate shape data
           auto &shape_values    = univariate_shape_data.shape_values;
@@ -296,10 +305,7 @@ namespace internal
 
           auto &shape_data_on_face  = univariate_shape_data.shape_data_on_face;
 
-          const unsigned int fe_degree     = fe.degree;
-          const unsigned int n_q_points_1d = quad.size();
-
-          const unsigned int n_dofs_1d = fe_degree + 1 - comp; 
+          const unsigned int n_dofs_1d = fe.degree + 1 - comp; 
           const unsigned int array_size = n_dofs_1d * n_q_points_1d;
 
           shape_gradients.resize_fast(array_size);
