@@ -102,7 +102,12 @@ namespace internal
       /**
        * Shape functions without an tensor product properties.
        */
-      tensor_none = 6
+      tensor_none = 6,
+
+      /**
+       * Shape functions without an tensor product properties.
+       */
+      tensor_raviart_thomas = 7
     };
 
 
