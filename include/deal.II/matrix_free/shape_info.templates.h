@@ -272,6 +272,7 @@ namespace internal
 
         // NOTE dofs_per_component_on_face is in tangential direction! 
         dofs_per_component_on_face = fe_in.n_dofs_per_face() + fe.degree; 
+        const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
 
         // To get the right shape_values of the RT element
         std::vector<unsigned int> lex_normal, lex_tangent;
@@ -279,10 +280,10 @@ namespace internal
           lex_tangent.push_back(i);
 
         lex_normal.push_back(0);
-        for (unsigned int i = dofs_per_component_on_face*2*dim;
-            i < dofs_per_component_on_face*2*dim + fe.degree - 1; i++)
+        for (unsigned int i = dofs_per_face_normal*2*dim;
+            i < dofs_per_face_normal*2*dim + fe.degree - 1; i++)
           lex_normal.push_back(i);
-        lex_normal.push_back(dofs_per_component_on_face);
+        lex_normal.push_back(dofs_per_face_normal);
         
         for (unsigned int comp = 0; comp < 2; comp++){
           UnivariateShapeData<Number> &univariate_shape_data = 
