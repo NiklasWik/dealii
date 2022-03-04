@@ -2593,30 +2593,27 @@ namespace internal
            ExcMessage("Only dim=2,3 supported"));
     static_assert(max_derivative >= 0 && max_derivative < 3,
                   "Only derivative orders 0-2 implemented");
+    static_assert(!lex_faces,
+            "lex_faces = True is not implemented for Raviart-Thomas");
     Assert(shape_values != nullptr,
            ExcMessage(
              "The given array shape_values must not be the null pointer."));
 
     // 13 cases in 2D + 3D for stride, out_stride, blocks1, blocks2
-    constexpr int n_blocks1 = // TODO lex_faces
-      lex_faces ? dealii::Utilities::pow<unsigned int>(n_rows, face_direction) :
-                  ((face_direction == normal_direction) ? (n_rows - 1) : 
+    constexpr int n_blocks1 = 
+                  (face_direction == normal_direction) ? (n_rows - 1) : 
                     ((face_direction == 0 && normal_direction == 2) ||
                      (face_direction == 1 && normal_direction == 2) ||
-                     (face_direction == 2 && normal_direction == 1)   ) ? n_rows : (n_rows + 1)
-                  );
-    constexpr int n_blocks2 = // TODO lex_faces
-      lex_faces ? dealii::Utilities::pow<unsigned int>(
-                    n_rows, std::max(dim - face_direction - 1, 0)) :
-                  ((dim == 2) ? 1 : 
+                     (face_direction == 2 && normal_direction == 1)   ) ? n_rows : (n_rows + 1);
+    constexpr int n_blocks2 = 
+                  (dim == 2) ? 1 : 
                     ((face_direction == normal_direction) ? (n_rows - 1) : 
                       (
                         ((face_direction == 0 && normal_direction == 1) ||
                          (face_direction == 1 && normal_direction == 0) ||
                          (face_direction == 2 && normal_direction == 0)) ? n_rows : (n_rows + 1)
                       )
-                    )
-                  );
+                    );
 
     AssertIndexRange(face_direction, dim);
 
@@ -2686,68 +2683,53 @@ namespace internal
                   }
               }
 
-            if (lex_faces) // TODO
+            // increment: in regular case, just go to the next point in
+            // x-direction. If we are at the end of one chunk in x-dir, need
+            // to jump over to the next layer in z-direction
+            switch (face_direction)
               {
-                ++out;
-                ++in;
-              }
-            else
-              // increment: in regular case, just go to the next point in
-              // x-direction. If we are at the end of one chunk in x-dir, need
-              // to jump over to the next layer in z-direction
-              switch (face_direction)
-                {
-                  case 0:
-                    in += contract_onto_face ? n_rows : 1;
-                    out += contract_onto_face ? 1 : n_rows;
-                    break;
-                  case 1:
-                    ++in;
-                    ++out;
-                    // faces 2 and 3 in 3D use local coordinate system zx, which
-                    // is the other way around compared to the tensor
-                    // product. Need to take that into account.
-                    if (dim == 3)
-                      {
-                        if (normal_direction == 0){
-                          if (contract_onto_face)
-                            out += n_rows - 1;
-                          else
-                            in += n_rows - 1;
-                        }
-                        if (normal_direction == 1){
-                          if (contract_onto_face)
-                            out += n_rows - 2;
-                          else
-                            in += n_rows - 2;
-                        }
-                        if (normal_direction == 2){
-                          if (contract_onto_face)
-                            out += n_rows;
-                          else
-                            in += n_rows;
-                        }
-                        
+                case 0:
+                  in += contract_onto_face ? n_rows : 1;
+                  out += contract_onto_face ? 1 : n_rows;
+                  break;
+                case 1:
+                  ++in;
+                  ++out;
+                  // faces 2 and 3 in 3D use local coordinate system zx, which
+                  // is the other way around compared to the tensor
+                  // product. Need to take that into account.
+                  if (dim == 3)
+                    {
+                      if (normal_direction == 0){
+                        if (contract_onto_face)
+                          out += n_rows - 1;
+                        else
+                          in += n_rows - 1;
                       }
-                    break;
-                  case 2:
-                    ++in;
-                    ++out;
-                    break;
-                  default:
-                    Assert(false, ExcNotImplemented());
-                }
+                      if (normal_direction == 1){
+                        if (contract_onto_face)
+                          out += n_rows - 2;
+                        else
+                          in += n_rows - 2;
+                      }
+                      if (normal_direction == 2){
+                        if (contract_onto_face)
+                          out += n_rows;
+                        else
+                          in += n_rows;
+                      }
+                      
+                    }
+                  break;
+                case 2:
+                  ++in;
+                  ++out;
+                  break;
+                default:
+                  Assert(false, ExcNotImplemented());
+              }
           }
-        if (lex_faces) // TODO
-          {
-            if (contract_onto_face)
-              in += (dealii::Utilities::pow(n_rows, face_direction + 1) -
-                     n_blocks1);
-            else
-              out += (dealii::Utilities::pow(n_rows, face_direction + 1) -
-                      n_blocks1);
-          }
-        else if (face_direction == 1 && dim == 3)
+        if (face_direction == 1 && dim == 3)
           {
             // adjust for local coordinate system zx
             if (contract_onto_face)

@@ -1035,31 +1035,14 @@ namespace internal
                                 univariate_shape_data[1]->fe_degree + 1,
                                 univariate_shape_data[1]->n_q_points_1d);
 
-      // const unsigned int temp_size =
-      //   Eval::n_rows_of_product == numbers::invalid_unsigned_int ?
-      //     0 :
-      //     (Eval::n_rows_of_product > Eval::n_columns_of_product ?
-      //       Eval::n_rows_of_product :
-      //       Eval::n_columns_of_product);
-
-      // TODO check if get_scratch_data is large enough. 
       Number *temp1 = fe_eval.get_scratch_data().begin();
       Number *temp2;
-      // if (temp_size == 0)
-      //   {
-          temp2 = temp1 + std::max(Utilities::fixed_power<dim>(
-                                    shape_data.front().fe_degree + 1),
-                                  Utilities::fixed_power<dim>(
-                                    shape_data.front().n_q_points_1d));
-      //   }
-      // else
-      //   { 
-      //     temp2 = temp1 + temp_size;
-      //   }
-      
-      // const std::size_t n_q_points = temp_size == 0 ? 
-      //                                 fe_eval.get_shape_info().n_q_points :
-      //                                 Eval::n_columns_of_product;
+
+      temp2 = temp1 + std::max(Utilities::fixed_power<dim>(
+                                shape_data.front().fe_degree + 1),
+                              Utilities::fixed_power<dim>(
+                                shape_data.front().n_q_points_1d));
+
       const std::size_t n_q_points = fe_eval.get_shape_info().n_q_points;
       const std::size_t dofs_per_comp =
           fe_eval.get_shape_info().dofs_per_component_on_cell;
@@ -1069,123 +1052,71 @@ namespace internal
       Number *gradients_quad = fe_eval.begin_gradients();
       Number *hessians_quad  = fe_eval.begin_hessians();
 
-      switch (dim)
-        { 
-          case 2:
-              { 
-                // First component:
-                evaluate_tensor_product_per_component<0, 
-                                                      Eval_normal,
-                                                      Eval_tangent,
-                                                      Eval_tangent>(
-                  eval_normal,
-                  eval_tangent,
-                  eval_tangent,
-                  evaluation_flag,
-                  values_dofs,
-                  temp1,
-                  temp2,
-                  values_quad,
-                  gradients_quad,
-                  hessians_quad,
-                  n_q_points);
+      
+      // First component:
+      evaluate_tensor_product_per_component<0, 
+                                            Eval_normal,
+                                            Eval_tangent,
+                                            Eval_tangent>(
+        eval_normal,
+        eval_tangent,
+        eval_tangent,
+        evaluation_flag,
+        values_dofs,
+        temp1,
+        temp2,
+        values_quad,
+        gradients_quad,
+        hessians_quad,
+        n_q_points);
 
-                // advance to second component in 1D array
-                values_dofs += dofs_per_comp;
-                values_quad += n_q_points;
-                gradients_quad += 2 * n_q_points;
-                hessians_quad += 3 * n_q_points;
+      // advance to second component in 1D array
+      values_dofs += dofs_per_comp;
+      values_quad += n_q_points;
+      gradients_quad += dim * n_q_points;
+      hessians_quad += (dim == 2) ? 3 * n_q_points : 6 * n_q_points;
 
-                // Second component :
-                evaluate_tensor_product_per_component<1, 
-                                                      Eval_tangent,
-                                                      Eval_normal,
-                                                      Eval_tangent>(
-                  eval_tangent,
-                  eval_normal,
-                  eval_tangent,
-                  evaluation_flag,
-                  values_dofs,
-                  temp1,
-                  temp2,
-                  values_quad,
-                  gradients_quad,
-                  hessians_quad,
-                  n_q_points);
-              }
-            break;
+      // Second component :
+      evaluate_tensor_product_per_component<1, 
+                                            Eval_tangent,
+                                            Eval_normal,
+                                            Eval_tangent>(
+        eval_tangent,
+        eval_normal,
+        eval_tangent,
+        evaluation_flag,
+        values_dofs,
+        temp1,
+        temp2,
+        values_quad,
+        gradients_quad,
+        hessians_quad,
+        n_q_points);
 
-          case 3:
-            // ******************************************
-            // *********** First component **************
-            evaluate_tensor_product_per_component<0, 
-                                                  Eval_normal,
-                                                  Eval_tangent,
-                                                  Eval_tangent>(
-              eval_normal,
-              eval_tangent,
-              eval_tangent,
-              evaluation_flag,
-              values_dofs,
-              temp1,
-              temp2,
-              values_quad,
-              gradients_quad,
-              hessians_quad,
-              n_q_points);
+        if (dim == 3){
+          // advance to the next component in 1D array
+          values_dofs += dofs_per_comp;
+          values_quad += n_q_points;
+          gradients_quad += 3 * n_q_points;
+          hessians_quad += 6 * n_q_points;
 
-            // advance to the next component in 1D array
-            values_dofs += dofs_per_comp;
-            values_quad += n_q_points;
-            gradients_quad += 3 * n_q_points;
-            hessians_quad += 6 * n_q_points;
-
-            // ******************************************
-            // ********** Second component **************
-            evaluate_tensor_product_per_component<1, 
-                                                  Eval_tangent,
-                                                  Eval_normal,
-                                                  Eval_tangent>(
-              eval_tangent,
-              eval_normal,
-              eval_tangent,
-              evaluation_flag,
-              values_dofs,
-              temp1,
-              temp2,
-              values_quad,
-              gradients_quad,
-              hessians_quad,
-              n_q_points);
-
-            // advance to the next component in 1D array
-            values_dofs += dofs_per_comp;
-            values_quad += n_q_points;
-            gradients_quad += 3 * n_q_points;
-            hessians_quad += 6 * n_q_points;
-
-            // ******************************************
-            // *********** Third component **************
-            evaluate_tensor_product_per_component<2, 
-                                                  Eval_tangent,
-                                                  Eval_tangent,
-                                                  Eval_normal>(
-              eval_tangent,
-              eval_tangent,
-              eval_normal,
-              evaluation_flag,
-              values_dofs,
-              temp1,
-              temp2,
-              values_quad,
-              gradients_quad,
-              hessians_quad,
-              n_q_points);
-              
-            break;
-
-          default:
-            AssertThrow(false, ExcNotImplemented());
+          // ******************************************
+          // *********** Third component **************
+          evaluate_tensor_product_per_component<2, 
+                                                Eval_tangent,
+                                                Eval_tangent,
+                                                Eval_normal>(
+            eval_tangent,
+            eval_tangent,
+            eval_normal,
+            evaluation_flag,
+            values_dofs,
+            temp1,
+            temp2,
+            values_quad,
+            gradients_quad,
+            hessians_quad,
+            n_q_points);
         }
     }
 
@@ -1362,29 +1293,14 @@ namespace internal
     Eval_normal eval_normal = create_evaluator_tensor_product(univariate_shape_data[0]);
     Eval_tangent eval_tangent = create_evaluator_tensor_product(univariate_shape_data[1]);
 
-    // const unsigned int temp_size =
-    //   Eval::n_rows_of_product == numbers::invalid_unsigned_int ?
-    //     0 :
-    //     (Eval::n_rows_of_product > Eval::n_columns_of_product ?
-    //        Eval::n_rows_of_product :
-    //        Eval::n_columns_of_product);
     Number *temp1 = fe_eval.get_scratch_data().begin();
     Number *temp2;
-    // if (temp_size == 0)
-    //   {
-        temp2 = temp1 + std::max(Utilities::fixed_power<dim>(
-                                   shape_data.front().fe_degree + 1),
-                                 Utilities::fixed_power<dim>(
-                                   shape_data.front().n_q_points_1d));
-    //   }
-    // else 
-    //   {
-    //     temp2 = temp1 + temp_size;
-    //   }
 
-    // const std::size_t  n_q_points = temp_size == 0 ?
-    //                                   fe_eval.get_shape_info().n_q_points :
-    //                                   Eval::n_columns_of_product;
+    temp2 = temp1 + std::max(Utilities::fixed_power<dim>(
+                                shape_data.front().fe_degree + 1),
+                              Utilities::fixed_power<dim>(
+                                shape_data.front().n_q_points_1d));
+
     const std::size_t  n_q_points = fe_eval.get_shape_info().n_q_points;
     const unsigned int dofs_per_comp =
         fe_eval.get_shape_info().dofs_per_component_on_cell;
@@ -1395,132 +1311,78 @@ namespace internal
     Number *gradients_quad = fe_eval.begin_gradients();
     Number *hessians_quad  = fe_eval.begin_hessians();
 
-    switch (dim)
-      {
-        case 2:
-          // *************************************
-          // ******* First component *************
-          integrate_tensor_product_per_component<0,
-                                                 Eval_normal,
-                                                 Eval_tangent,
-                                                 Eval_tangent>(
-            eval_normal,
-            eval_tangent,
-            eval_tangent,
-            integration_flag,
-            values_dofs,
-            temp1,
-            temp2,
-            values_quad,
-            gradients_quad,
-            hessians_quad,
-            n_q_points,
-            add_into_values_array);
+    
+    // ***************************************
+    // ********** First component ************
+    integrate_tensor_product_per_component<0,
+                                            Eval_normal,
+                                            Eval_tangent,
+                                            Eval_tangent>(
+      eval_normal,
+      eval_tangent,
+      eval_tangent,
+      integration_flag,
+      values_dofs,
+      temp1,
+      temp2,
+      values_quad,
+      gradients_quad,
+      hessians_quad,
+      n_q_points,
+      add_into_values_array);
 
-          // advance to the next component in 1D array
-          values_dofs += dofs_per_comp;
-          values_quad += n_q_points;
-          gradients_quad += 2 * n_q_points;
-          hessians_quad += 3 * n_q_points;
+    // advance to the next component in 1D array
+    values_dofs += dofs_per_comp;
+    values_quad += n_q_points;
+    gradients_quad += dim * n_q_points;
+    hessians_quad += (dim == 2) ? 3 * n_q_points : 6 * n_q_points;
 
-          // *************************************
-          // ******* Second component ************
-          // *************************************
-          integrate_tensor_product_per_component<1,
-                                                 Eval_tangent,
-                                                 Eval_normal,
-                                                 Eval_tangent>(
-            eval_tangent,
-            eval_normal,
-            eval_tangent,
-            integration_flag,
-            values_dofs,
-            temp1,
-            temp2,
-            values_quad,
-            gradients_quad,
-            hessians_quad,
-            n_q_points,
-            add_into_values_array);
+    // ***************************************
+    // ********** Second component ***********
+    integrate_tensor_product_per_component<1,
+                                            Eval_tangent,
+                                            Eval_normal,
+                                            Eval_tangent>(
+      eval_tangent,
+      eval_normal,
+      eval_tangent,
+      integration_flag,
+      values_dofs,
+      temp1,
+      temp2,
+      values_quad,
+      gradients_quad,
+      hessians_quad,
+      n_q_points,
+      add_into_values_array);
 
-          break;
+      if (dim == 3){
+        // advance to the next component in 1D array
+        values_dofs += dofs_per_comp;
+        values_quad += n_q_points;
+        gradients_quad += 3 * n_q_points;
+        hessians_quad += 6 * n_q_points;
 
-        case 3:
-          // ***************************************
-          // ********** First component ************
-          integrate_tensor_product_per_component<0,
-                                                 Eval_normal,
-                                                 Eval_tangent,
-                                                 Eval_tangent>(
-            eval_normal,
-            eval_tangent,
-            eval_tangent,
-            integration_flag,
-            values_dofs,
-            temp1,
-            temp2,
-            values_quad,
-            gradients_quad,
-            hessians_quad,
-            n_q_points,
-            add_into_values_array);
-
-          // advance to the next component in 1D array
-          values_dofs += dofs_per_comp;
-          values_quad += n_q_points;
-          gradients_quad += 3 * n_q_points;
-          hessians_quad += 6 * n_q_points;
-
-          // ***************************************
-          // ********** Second component ***********
-          // ***************************************
-          integrate_tensor_product_per_component<1,
-                                                 Eval_tangent,
-                                                 Eval_normal,
-                                                 Eval_tangent>(
-            eval_tangent,
-            eval_normal,
-            eval_tangent,
-            integration_flag,
-            values_dofs,
-            temp1,
-            temp2,
-            values_quad,
-            gradients_quad,
-            hessians_quad,
-            n_q_points,
-            add_into_values_array);
-
-          // advance to the next component in 1D array
-          values_dofs += dofs_per_comp;
-          values_quad += n_q_points;
-          gradients_quad += 3 * n_q_points;
-          hessians_quad += 6 * n_q_points;
-
-          // ***************************************
-          // ********** Third component ************
-          integrate_tensor_product_per_component<2,
-                                                 Eval_tangent,
-                                                 Eval_tangent,
-                                                 Eval_normal>(
-            eval_tangent,
-            eval_tangent,
-            eval_normal,
-            integration_flag,
-            values_dofs,
-            temp1,
-            temp2,
-            values_quad,
-            gradients_quad,
-            hessians_quad,
-            n_q_points,
-            add_into_values_array);
-              
-          break;
-
-        default:
-          AssertThrow(false, ExcNotImplemented());
+        // ***************************************
+        // ********** Third component ************
+        integrate_tensor_product_per_component<2,
+                                               Eval_tangent,
+                                               Eval_tangent,
+                                               Eval_normal>(
+          eval_tangent,
+          eval_tangent,
+          eval_normal,
+          integration_flag,
+          values_dofs,
+          temp1,
+          temp2,
+          values_quad,
+          gradients_quad,
+          hessians_quad,
+          n_q_points,
+          add_into_values_array);
       }
+      
   }
 
 
@@ -3272,6 +3134,17 @@ namespace internal
   template <int dim, int fe_degree, typename Number, bool lex_faces = false>
   struct FEFaceNormalEvaluationImpl
   {
+    using Evalf_normal = EvaluatorTensorProduct<evaluate_raviart_thomas,
+                                                  dim,
+                                                  fe_degree + 1,
+                                                  0,
+                                                  Number>;
+    using Evalf_tangent = EvaluatorTensorProduct<evaluate_raviart_thomas,
+                                                  dim,
+                                                  fe_degree,
+                                                  0,
+                                                  Number>;
+
     template <bool do_evaluate, bool add_into_output>
     static void
     interpolate(const unsigned int                            n_components,
@@ -3429,16 +3302,6 @@ namespace internal
       const unsigned int dofs_per_component_on_cell,
       const unsigned int dofs_per_component_on_face)
     {
-      using Evalf_normal = EvaluatorTensorProduct<evaluate_raviart_thomas,
-                                                  dim,
-                                                  fe_degree + 1,
-                                                  0,
-                                                  Number>;
-      using Evalf_tangent = EvaluatorTensorProduct<evaluate_raviart_thomas,
-                                                   dim,
-                                                   fe_degree,
-                                                   0,
-                                                   Number>;
       if (face_direction == face_no / 2)
         {
           Evalf_normal
@@ -3473,169 +3336,46 @@ namespace internal
 
           
             if (flag & EvaluationFlags::hessians){
-              if (face_direction == 0){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              2,
-                                                              Evalf_normal,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent>(
-                  evalf_normal,
-                  evalf_tangent,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride_after_normal,
-                  in_stride,
-                  out_stride_after_normal,
-                  out_stride);
-
-              }else if (face_direction == 1){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              2,
-                                                              Evalf_tangent,
-                                                              Evalf_normal,
-                                                              Evalf_tangent>(
-                  evalf_tangent,
-                  evalf_normal,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride_after_normal,
-                  out_stride,
-                  out_stride_after_normal);
-              }else{
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              2,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent,
-                                                              Evalf_normal>(
-                  evalf_tangent,
-                  evalf_tangent,
-                  evalf_normal,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride,
-                  out_stride,
-                  out_stride);
-              }
+              interpolate_generic_raviart_thomas_derivative<do_evaluate,
+                                                            add_into_output,
+                                                            face_direction,
+                                                            2>(
+                input,
+                output,
+                evalf_normal,
+                evalf_tangent,
+                in_stride_after_normal,
+                in_stride,
+                out_stride_after_normal,
+                out_stride);
             }
             else if (flag & EvaluationFlags::gradients){
-              if (face_direction == 0){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              1,
-                                                              Evalf_normal,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent>(
-                  evalf_normal,
-                  evalf_tangent,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride_after_normal,
-                  in_stride,
-                  out_stride_after_normal,
-                  out_stride);
-
-              }else if (face_direction == 1){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction,
-                                                              1,
-                                                              Evalf_tangent,
-                                                              Evalf_normal,
-                                                              Evalf_tangent>(
-                  evalf_tangent,
-                  evalf_normal,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride_after_normal,
-                  out_stride,
-                  out_stride_after_normal);
-              }else{
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              1,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent,
-                                                              Evalf_normal>(
-                  evalf_tangent,
-                  evalf_tangent,
-                  evalf_normal,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride,
-                  out_stride,
-                  out_stride);
-              }
+              interpolate_generic_raviart_thomas_derivative<do_evaluate,
+                                                            add_into_output,
+                                                            face_direction,
+                                                            1>(
+                input,
+                output,
+                evalf_normal,
+                evalf_tangent,
+                in_stride_after_normal,
+                in_stride,
+                out_stride_after_normal,
+                out_stride);
             }
             else{
-              if (face_direction == 0){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              0,
-                                                              Evalf_normal,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent>(
-                  evalf_normal,
-                  evalf_tangent,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride_after_normal,
-                  in_stride,
-                  out_stride_after_normal,
-                  out_stride);
-
-              }else if (face_direction == 1){
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              0,
-                                                              Evalf_tangent,
-                                                              Evalf_normal,
-                                                              Evalf_tangent>(
-                  evalf_tangent,
-                  evalf_normal,
-                  evalf_tangent,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride_after_normal,
-                  out_stride,
-                  out_stride_after_normal);
-              }else{
-                interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
-                                                              add_into_output, 
-                                                              face_direction, 
-                                                              0,
-                                                              Evalf_tangent,
-                                                              Evalf_tangent,
-                                                              Evalf_normal>(
-                  evalf_tangent,
-                  evalf_tangent,
-                  evalf_normal,
-                  input,
-                  output,
-                  in_stride,
-                  in_stride,
-                  out_stride,
-                  out_stride);
-              }
+              interpolate_generic_raviart_thomas_derivative<do_evaluate,
+                                                            add_into_output,
+                                                            face_direction,
+                                                            0>(
+                input,
+                output,
+                evalf_normal,
+                evalf_tangent,
+                in_stride_after_normal,
+                in_stride,
+                out_stride_after_normal,
+                out_stride);
             }
         }
       else if (face_direction < dim)
@@ -3655,6 +3395,79 @@ namespace internal
             dofs_per_component_on_face);
         }
     }
+
+    /* Help function for interpolate_generic_raviart_thomas */
+    template <bool do_evaluate, 
+              bool add_into_output, 
+              int face_direction, 
+              int max_derivative>
+    static inline void 
+    interpolate_generic_raviart_thomas_derivative(
+      const Number *input,
+      Number *output,
+      const Evalf_normal evalf_normal,
+      const Evalf_tangent evalf_tangent,
+      const unsigned int in_stride_after_normal,
+      const unsigned int in_stride,
+      const unsigned int out_stride_after_normal,
+      const unsigned int out_stride
+    ){
+      if (face_direction == 0){
+        interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
+                                                      add_into_output, 
+                                                      face_direction, 
+                                                      max_derivative,
+                                                      Evalf_normal,
+                                                      Evalf_tangent,
+                                                      Evalf_tangent>(
+          evalf_normal,
+          evalf_tangent,
+          evalf_tangent,
+          input,
+          output,
+          in_stride_after_normal,
+          in_stride,
+          out_stride_after_normal,
+          out_stride);
+
+      }else if (face_direction == 1){
+        interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
+                                                      add_into_output, 
+                                                      face_direction, 
+                                                      max_derivative,
+                                                      Evalf_tangent,
+                                                      Evalf_normal,
+                                                      Evalf_tangent>(
+          evalf_tangent,
+          evalf_normal,
+          evalf_tangent,
+          input,
+          output,
+          in_stride,
+          in_stride_after_normal,
+          out_stride,
+          out_stride_after_normal);
+      }else{
+        interpolate_generic_raviart_thomas_apply_face<do_evaluate, 
+                                                      add_into_output, 
+                                                      face_direction, 
+                                                      max_derivative,
+                                                      Evalf_tangent,
+                                                      Evalf_tangent,
+                                                      Evalf_normal>(
+          evalf_tangent,
+          evalf_tangent,
+          evalf_normal,
+          input,
+          output,
+          in_stride,
+          in_stride,
+          out_stride,
+          out_stride);
+      }
+    }
+
+    /* Help function for interpolate_generic_raviart_thomas */
     template <bool do_evaluate, 
               bool add_into_output, 
               int face_direction, 
