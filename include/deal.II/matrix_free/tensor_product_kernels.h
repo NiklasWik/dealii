@@ -2520,7 +2520,7 @@ namespace internal
     constexpr int stride    = Utilities::pow(n_columns, direction);
     constexpr int n_blocks1 = one_line ? 1 : stride;
     constexpr int n_blocks2 = (dim - direction - 1 == 0) ? 1 :
-      ( (direction == normal_dir) ? Utilities::pow((n_rows - 1), dim - direction - 1) : 
+      ( (direction == normal_dir) ? Utilities::pow((n_rows - 1), (direction >= dim) ? 0 : dim - direction - 1) : 
           ( ( (direction < normal_dir) ? (n_rows + 1) : n_rows) *
               ( (dim - direction == 3) ? n_rows : 1) 
           ) 
