@@ -6719,7 +6719,7 @@ FEEvaluation<dim,
       message += "                                 " + correct_pos;
 
       Assert(static_cast<unsigned int>(fe_degree) ==
-                 this->data->data.front().fe_degree &&
+                 this->data->data.back().fe_degree &&
                n_q_points == this->n_quadrature_points,
              ExcMessage(message));
     }
