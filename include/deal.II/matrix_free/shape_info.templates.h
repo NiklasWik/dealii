@@ -171,6 +171,54 @@ namespace internal
         }
     }
 
+    // TODO. This should be implemented into get_element_type_specific_information()
+    // and in the FE and not stand alone here. 
+    template<int dim>
+    std::vector<unsigned int> 
+    get_lexicographic_numbering_raviart_thomas(const unsigned int degree,
+                                               const unsigned int n_dofs_face){
+  
+      std::vector<unsigned int> lexicographic_numbering;
+      // component 1   
+      for (unsigned int j = 0; j < n_dofs_face; j++){
+        lexicographic_numbering.push_back(j);
+        for (unsigned int i = n_dofs_face*2*dim;
+            i < n_dofs_face*2*dim + degree - 1; i++)
+          lexicographic_numbering.push_back(i + j*(degree - 1));
+        lexicographic_numbering.push_back(n_dofs_face + j);
+      }
+
+      // component 2 
+      unsigned int layers = (dim==3) ? degree : 1;
+      for (unsigned int k = 0; k < layers; k++){
+        unsigned int k_add = k*degree;
+        for (unsigned int j = n_dofs_face*2; j < n_dofs_face*2 + degree; j++)
+          lexicographic_numbering.push_back(j+k_add);
+
+        for (unsigned int i = n_dofs_face*( 2*dim + (degree - 1) );
+              i < n_dofs_face*( 2*dim + (degree - 1)) + (degree - 1)*degree;
+              i++){
+          lexicographic_numbering.push_back(i + k_add*(degree-1));
+        }
+        for (unsigned int j = n_dofs_face*3; j < n_dofs_face*3 + degree; j++)
+          lexicographic_numbering.push_back(j+k_add);
+      }  
+
+      // component 3
+      if (dim == 3){
+        for (unsigned int i = 4*n_dofs_face; i < 5*n_dofs_face; i++)
+          lexicographic_numbering.push_back(i);
+        for (unsigned int i = 6*n_dofs_face + n_dofs_face*2*(degree - 1);
+            i < 6*n_dofs_face + n_dofs_face*3*(degree - 1); 
+            i++)
+          lexicographic_numbering.push_back(i);
+        for (unsigned int i = 5*n_dofs_face; i < 6*n_dofs_face; i++)
+          lexicographic_numbering.push_back(i);
+      }
+
+      return lexicographic_numbering;
+    }
+
 
 
     template <int dim_to, int dim, int spacedim>
@@ -273,6 +321,10 @@ namespace internal
         // NOTE dofs_per_component_on_face is in tangential direction! 
         dofs_per_component_on_face = fe_in.n_dofs_per_face() + fe.degree; 
         const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
+
+        lexicographic_numbering = 
+          get_lexicographic_numbering_raviart_thomas<dim>(fe_in.degree, 
+                                                          fe_in.n_dofs_per_face());
 
         // To get the right shape_values of the RT element
         std::vector<unsigned int> lex_normal, lex_tangent;
