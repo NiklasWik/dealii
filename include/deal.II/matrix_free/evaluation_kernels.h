@@ -207,23 +207,22 @@ namespace internal
   {
     using Eval_normal = EvaluatorTensorProduct<evaluate_raviart_thomas,
                                                dim,
-                                               fe_degree + 1,
+                                               std::max(fe_degree + 1, 1),
                                                n_q_points_1d,
                                                Number>;
+
     using Eval_tangent = EvaluatorTensorProduct<evaluate_raviart_thomas,
-                                               dim,
-                                               fe_degree,
-                                               n_q_points_1d,
-                                               Number>;
+                                                dim,
+                                                std::max(fe_degree, 1),
+                                                n_q_points_1d,
+                                                Number>;
     static void
-    evaluate(const unsigned int                     n_components,
-             const EvaluationFlags::EvaluationFlags evaluation_flag,
+    evaluate(const EvaluationFlags::EvaluationFlags evaluation_flag,
              const Number *                         values_dofs_actual,
              FEEvaluationData<dim, Number, false> & fe_eval);
 
     static void
-    integrate(const unsigned int                     n_components,
-              const EvaluationFlags::EvaluationFlags integration_flag,
+    integrate(const EvaluationFlags::EvaluationFlags integration_flag,
               Number *                               values_dofs_actual,
               FEEvaluationData<dim, Number, false> & fe_eval,
               const bool                             add_into_values_array);
@@ -1005,8 +1004,7 @@ namespace internal
     dim,
     fe_degree,
     n_q_points_1d,
-    Number>::evaluate(const unsigned int                     n_components,
-                      const EvaluationFlags::EvaluationFlags evaluation_flag,
+    Number>::evaluate(const EvaluationFlags::EvaluationFlags evaluation_flag,
                       const Number *                         values_dofs_actual,
                       FEEvaluationData<dim, Number, false> & fe_eval)
     {
@@ -1274,8 +1272,7 @@ namespace internal
     dim,
     fe_degree,
     n_q_points_1d,
-    Number>::integrate(const unsigned int                     n_components,
-                       const EvaluationFlags::EvaluationFlags integration_flag,
+    Number>::integrate(const EvaluationFlags::EvaluationFlags integration_flag,
                        Number *                               values_dofs_actual,
                        FEEvaluationData<dim, Number, false>  &fe_eval,
                        const bool                             add_into_values_array)
@@ -2486,14 +2483,13 @@ namespace internal
                                              values_dofs,
                                              fe_eval);
         }
-      else if (element_type == ElementType::tensor_raviart_thomas)
+      else if (fe_degree >= 1 && element_type == ElementType::tensor_raviart_thomas)
         {
           FEEvaluationImpl<ElementType::tensor_raviart_thomas,
                            dim,
-                           fe_degree,
-                           n_q_points_1d,
-                           Number>::evaluate(n_components,
-                                             evaluation_flag,
+                           std::max(fe_degree,1),
+                           std::max(n_q_points_1d,1),
+                           Number>::evaluate(evaluation_flag,
                                              values_dofs,
                                              fe_eval);
         }
@@ -2624,14 +2620,13 @@ namespace internal
                                               fe_eval,
                                               sum_into_values_array);
         }
-      else if (element_type == ElementType::tensor_raviart_thomas)
+      else if (fe_degree >= 1 && element_type == ElementType::tensor_raviart_thomas)
         {
           FEEvaluationImpl<ElementType::tensor_raviart_thomas,
                            dim,
-                           fe_degree,
-                           n_q_points_1d,
-                           Number>::integrate(n_components,
-                                              integration_flag,
+                           std::max(fe_degree,1),
+                           std::max(n_q_points_1d,1),
+                           Number>::integrate(integration_flag,
                                               values_dofs,
                                               fe_eval,
                                               sum_into_values_array);
@@ -3157,18 +3152,18 @@ namespace internal
 
     using Eval_normal = EvaluatorTensorProduct<evaluate_raviart_thomas,
                                                dim - 1,
-                                               fe_degree + 1,
+                                               std::max(fe_degree + 1, 1),
                                                n_q_points_1d,
                                                Number>;
     using Eval_tangent = EvaluatorTensorProduct<evaluate_raviart_thomas,
                                                 dim - 1,
-                                                fe_degree,
+                                                std::max(fe_degree, 1),
                                                 n_q_points_1d,
                                                 Number>;
 
     using Eval_general = EvaluatorTensorProduct<evaluate_general,
                                                 dim - 1,
-                                                fe_degree,
+                                                std::max(fe_degree,0),
                                                 n_q_points_1d,
                                                 Number>;
     template<typename Eval_type>
@@ -3294,18 +3289,31 @@ namespace internal
         }
       }
       else if (face_orientation == 1){
-        // NOTE. Take zx-coordinates into account 
-        evaluate_in_tangent_face_apply<Eval_tangent, Eval_normal, 1>(
-          eval_tangent,
-          eval_normal,
-          values_dofs,
-          values_quad,
-          gradients_quad,
-          hessians_quad,
-          scratch_data,
-          evaluation_flag,
-          n_dofs_tangent,
-          n_q_points);
+        // NOTE. Take zx-coordinates into account for dim == 3
+        if (dim == 3)
+          evaluate_in_tangent_face_apply<Eval_tangent, Eval_normal, 1>(
+            eval_tangent,
+            eval_normal,
+            values_dofs,
+            values_quad,
+            gradients_quad,
+            hessians_quad,
+            scratch_data,
+            evaluation_flag,
+            n_dofs_tangent,
+            n_q_points);
+        else 
+          evaluate_in_tangent_face_apply<Eval_normal, Eval_tangent, 0>(
+            eval_normal,
+            eval_tangent,
+            values_dofs,
+            values_quad,
+            gradients_quad,
+            hessians_quad,
+            scratch_data,
+            evaluation_flag,
+            n_dofs_tangent,
+            n_q_points);
         
         values_dofs += 3*n_dofs_tangent;
         values_quad += n_q_points;
@@ -3330,6 +3338,7 @@ namespace internal
         hessians_quad += dim * (dim + 1) / 2 * n_q_points;
 
         if (dim == 3){
+          // NOTE. Take zx-coordinates into account
           evaluate_in_tangent_face_apply<Eval_normal, Eval_tangent, 0>(
             eval_normal,
             eval_tangent,
@@ -3818,18 +3827,31 @@ namespace internal
         }
       }
       else if (face_orientation == 1){
-        // Note! take zx-coordinates into account!
-        integrate_in_tangent_face_apply<Eval_tangent, Eval_normal, 1>(
-          eval_tangent,
-          eval_normal,
-          values_dofs,
-          values_quad,
-          gradients_quad,
-          hessians_quad,
-          scratch_data,
-          integration_flag,
-          n_dofs_tangent,
-          n_q_points);
+        // Note! take zx-coordinates into account for dim == 3
+        if (dim == 3)
+          integrate_in_tangent_face_apply<Eval_tangent, Eval_normal, 1>(
+            eval_tangent,
+            eval_normal,
+            values_dofs,
+            values_quad,
+            gradients_quad,
+            hessians_quad,
+            scratch_data,
+            integration_flag,
+            n_dofs_tangent,
+            n_q_points);
+        else 
+          integrate_in_tangent_face_apply<Eval_normal, Eval_tangent, 0>(
+            eval_normal,
+            eval_tangent,
+            values_dofs,
+            values_quad,
+            gradients_quad,
+            hessians_quad,
+            scratch_data,
+            integration_flag,
+            n_dofs_tangent,
+            n_q_points);
 
         values_dofs += 3 * n_dofs_tangent;
         values_quad += n_q_points;
@@ -3854,6 +3876,7 @@ namespace internal
         hessians_quad += dim * (dim + 1) / 2 * n_q_points;
 
         if (dim == 3){
+          // Note! take zx-coordinates into account
           integrate_in_tangent_face_apply<Eval_normal, Eval_tangent, 0>(
             eval_normal,
             eval_tangent,
@@ -4325,12 +4348,12 @@ namespace internal
   {
     using Evalf_normal = EvaluatorTensorProduct<evaluate_raviart_thomas,
                                                 dim,
-                                                fe_degree + 1,
+                                                std::max(fe_degree + 1, 1),
                                                 0,
                                                 Number>;
     using Evalf_tangent = EvaluatorTensorProduct<evaluate_raviart_thomas,
                                                  dim,
-                                                 fe_degree,
+                                                 std::max(fe_degree, 1),
                                                  0,
                                                  Number>;
 
@@ -5045,12 +5068,12 @@ namespace internal
       constexpr unsigned int n_q_points_1d_actual =
         fe_degree > -1 ? n_q_points_1d : 0;
 
-      if(shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
+      if(fe_degree >= 1 && shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
         // TODO. Add symmetric_evaluation
         FEFaceEvaluationImplRaviartThomas<false,
                                           dim,
-                                          fe_degree,
-                                          n_q_points_1d_actual,
+                                          std::max(fe_degree, 1),
+                                          std::max(n_q_points_1d,1),
                                           Number>::evaluate_in_face(
                                                       evaluation_flag,
                                                       shape_info,
@@ -5220,11 +5243,11 @@ namespace internal
         fe_degree > -1 ? n_q_points_1d : 0;
       const unsigned int subface_index = fe_eval.get_subface_index();
 
-      if(shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
+      if(fe_degree >= 1 && shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
         FEFaceEvaluationImplRaviartThomas<false,
                                           dim,
-                                          fe_degree,
-                                          n_q_points_1d_actual,
+                                          std::max(fe_degree,1),
+                                          std::max(n_q_points_1d,1),
                                           Number>::integrate_in_face(
                                                       integration_flag,
                                                       shape_info,
