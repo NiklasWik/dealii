@@ -2292,7 +2292,10 @@ inline unsigned int
 MatrixFree<dim, Number, VectorizedArrayType>::n_components() const
 {
   AssertDimension(dof_handlers.size(), dof_info.size());
-  return dof_handlers.size();
+  unsigned int comps = 0;
+  for (unsigned int i = 0; i < dof_handlers.size(); i++)
+    comps += dof_handlers[i]->get_fe().n_components();
+  return comps;
 }
 
 
