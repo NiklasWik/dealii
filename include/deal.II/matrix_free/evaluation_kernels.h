@@ -5068,7 +5068,7 @@ namespace internal
       constexpr unsigned int n_q_points_1d_actual =
         fe_degree > -1 ? n_q_points_1d : 0;
 
-      if(fe_degree >= 1 && shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
+      if(fe_degree >= 1 && shape_info.element_type == MatrixFreeFunctions::tensor_raviart_thomas){
         // TODO. Add symmetric_evaluation
         FEFaceEvaluationImplRaviartThomas<false,
                                           dim,
@@ -5243,7 +5243,8 @@ namespace internal
         fe_degree > -1 ? n_q_points_1d : 0;
       const unsigned int subface_index = fe_eval.get_subface_index();
 
-      if(fe_degree >= 1 && shape_info.element_type <= MatrixFreeFunctions::tensor_raviart_thomas){
+      if(fe_degree >= 1 && shape_info.element_type == MatrixFreeFunctions::tensor_raviart_thomas){
+        // TODO subface_index
         FEFaceEvaluationImplRaviartThomas<false,
                                           dim,
                                           std::max(fe_degree,1),
