@@ -319,7 +319,8 @@ namespace internal
         dofs_per_component_on_cell = fe_in.n_dofs_per_cell() / n_components;
 
         // NOTE dofs_per_component_on_face is in tangential direction! 
-        dofs_per_component_on_face = fe_in.n_dofs_per_face() + fe.degree; 
+        dofs_per_component_on_face = fe_in.n_dofs_per_face() + 
+                              Utilities::pow(fe_in.degree, dim-2); 
         const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
 
         lexicographic_numbering = 
