@@ -2335,7 +2335,7 @@ namespace internal
 
 
 
-  // RAVIART-THOMAS. TODO EDIT INFORMATION
+
    /**
    * Internal evaluator for shape function in arbitrary dimension using the
    * tensor product form of the basis functions.
@@ -2446,9 +2446,9 @@ namespace internal
      *                            array, otherwise it sums over the columns
      * @tparam add If true, the result is added to the output vector, else
      *             the computed values overwrite the content in the output
-     * @tparam type Determines whether the evaluation is symmetric in even
-     *              rows (type=0) or odd rows (type=1) of @p shape_data and
-     *              skew-symmetric in odd rows (type=0) or even rows (type=1)
+     * @tparam normal_dir Indicates in which direction the normal is, e.g
+     *                    0 if the normal is in x-direction, 1 if in y-direction
+     *                    etc. 
      * @tparam one_line If true, the kernel is only applied along a single 1D
      *                  stripe within a dim-dimensional tensor, not the full
      *                  n_rows^dim points as in the @p false case.
@@ -2519,6 +2519,8 @@ namespace internal
 
     constexpr int stride    = Utilities::pow(n_columns, direction);
     constexpr int n_blocks1 = one_line ? 1 : stride;
+
+    // The number of blocks depend on both direction and dimension. 
     constexpr int n_blocks2 = (dim - direction - 1 == 0) ? 1 :
       ( (direction == normal_dir) ? Utilities::pow((n_rows - 1), (direction >= dim) ? 0 : dim - direction - 1) : 
           ( ( (direction < normal_dir) ? (n_rows + 1) : n_rows) *
@@ -2533,26 +2535,31 @@ namespace internal
             Number x[mm];
             for (int i = 0; i < mm; ++i)
               x[i] = in[stride * i];
+
             for (int col = 0; col < nn; ++col)
               {
                 Number2 val0;
-                if (contract_over_rows == true)
+
+                if (contract_over_rows)
                   val0 = shape_data[col];
                 else
                   val0 = shape_data[col * n_columns];
+
                 Number res0 = val0 * x[0];
                 for (int i = 1; i < mm; ++i)
                   {
-                    if (contract_over_rows == true)
+                    if (contract_over_rows)
                       val0 = shape_data[i * n_columns + col];
                     else
                       val0 = shape_data[col * n_columns + i];
+
                     res0 += val0 * x[i];
                   }
-                if (add == false)
-                  out[stride * col] = res0;
-                else
+                if (add)
                   out[stride * col] += res0;
+
+                else
+                  out[stride * col] = res0;
               }
 
             if (one_line == false)
@@ -2599,7 +2606,8 @@ namespace internal
            ExcMessage(
              "The given array shape_values must not be the null pointer."));
 
-    // 13 cases in 2D + 3D for stride, out_stride, blocks1, blocks2
+    // Determine the number of blocks depending on the face and normaldirection,
+    // as well as dimension. 
     constexpr int n_blocks1 = 
                   (face_direction == normal_direction) ? (n_rows - 1) : 
                     ((face_direction == 0 && normal_direction == 2) ||
@@ -2637,46 +2645,56 @@ namespace internal
               {
                 Number res0 = shape_values[0] * in[0];
                 Number res1, res2;
+
                 if (max_derivative > 0)
                   res1 = shape_values[n_rows] * in[0];
+
                 if (max_derivative > 1)
                   res2 = shape_values[2 * n_rows] * in[0];
+
                 for (int ind = 1; ind < n_rows; ++ind)
                   {
                     res0 += shape_values[ind] * in[stride * ind];
                     if (max_derivative > 0)
                       res1 += shape_values[ind + n_rows] * in[stride * ind];
+
                     if (max_derivative > 1)
                       res2 += shape_values[ind + 2 * n_rows] * in[stride * ind];
                   }
-                if (add == false)
+                if (add)
                   {
-                    out[0] = res0;
+                    out[0] += res0;
+
                     if (max_derivative > 0)
-                      out[out_stride] = res1;
+                      out[out_stride] += res1;
+
                     if (max_derivative > 1)
-                      out[2 * out_stride] = res2;
+                      out[2 * out_stride] += res2;
                   }
                 else
                   {
-                    out[0] += res0;
+                    out[0] = res0;
+
                     if (max_derivative > 0)
-                      out[out_stride] += res1;
+                      out[out_stride] = res1;
+
                     if (max_derivative > 1)
-                      out[2 * out_stride] += res2;
+                      out[2 * out_stride] = res2;
                   }
               }
             else
               {
                 for (int col = 0; col < n_rows; ++col)
                   {
-                    if (add == false)
-                      out[col * stride] = shape_values[col] * in[0];
-                    else
+                    if (add)
                       out[col * stride] += shape_values[col] * in[0];
+                    else
+                      out[col * stride] = shape_values[col] * in[0];
+
                     if (max_derivative > 0)
                       out[col * stride] +=
                         shape_values[col + n_rows] * in[out_stride];
+
                     if (max_derivative > 1)
                       out[col * stride] +=
                         shape_values[col + 2 * n_rows] * in[2 * out_stride];
@@ -2692,6 +2710,7 @@ namespace internal
                   in += contract_onto_face ? n_rows : 1;
                   out += contract_onto_face ? 1 : n_rows;
                   break;
+
                 case 1:
                   ++in;
                   ++out;
@@ -2721,10 +2740,12 @@ namespace internal
                       
                     }
                   break;
+
                 case 2:
                   ++in;
                   ++out;
                   break;
+
                 default:
                   Assert(false, ExcNotImplemented());
               }
