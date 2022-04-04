@@ -65,7 +65,7 @@ namespace internal
      */
     evaluate_symmetric_hierarchical,
     /**
-     * Raviart-Thomas elements with anisotropic polynomials 
+     * Raviart-Thomas elements with anisotropic polynomials
      **/
     evaluate_raviart_thomas
   };
@@ -123,9 +123,6 @@ namespace internal
   {};
 
 
-  
-
-  
 
   /**
    * Internal evaluator for shape function in arbitrary dimension using the
@@ -2335,8 +2332,7 @@ namespace internal
 
 
 
-
-   /**
+  /**
    * Internal evaluator for shape function in arbitrary dimension using the
    * tensor product form of the basis functions.
    *
@@ -2365,7 +2361,7 @@ namespace internal
                                 Number,
                                 Number2>
   {
-    static constexpr unsigned int n_rows_of_product =  
+    static constexpr unsigned int n_rows_of_product =
       Utilities::pow(n_rows, dim); // WRONG!
     static constexpr unsigned int n_columns_of_product =
       Utilities::pow(n_columns, dim);
@@ -2414,21 +2410,27 @@ namespace internal
     void
     values(const Number in[], Number out[]) const
     {
-      apply<direction, contract_over_rows, add, normal_dir>(shape_values, in, out);
+      apply<direction, contract_over_rows, add, normal_dir>(shape_values,
+                                                            in,
+                                                            out);
     }
 
     template <int direction, bool contract_over_rows, bool add, int normal_dir>
     void
     gradients(const Number in[], Number out[]) const
     {
-      apply<direction, contract_over_rows, add, normal_dir>(shape_gradients, in, out);
+      apply<direction, contract_over_rows, add, normal_dir>(shape_gradients,
+                                                            in,
+                                                            out);
     }
 
     template <int direction, bool contract_over_rows, bool add, int normal_dir>
     void
     hessians(const Number in[], Number out[]) const
     {
-      apply<direction, contract_over_rows, add, normal_dir>(shape_hessians, in, out);
+      apply<direction, contract_over_rows, add, normal_dir>(shape_hessians,
+                                                            in,
+                                                            out);
     }
 
     /**
@@ -2448,7 +2450,7 @@ namespace internal
      *             the computed values overwrite the content in the output
      * @tparam normal_dir Indicates in which direction the normal is, e.g
      *                    0 if the normal is in x-direction, 1 if in y-direction
-     *                    etc. 
+     *                    etc.
      * @tparam one_line If true, the kernel is only applied along a single 1D
      *                  stripe within a dim-dimensional tensor, not the full
      *                  n_rows^dim points as in the @p false case.
@@ -2461,7 +2463,7 @@ namespace internal
     template <int  direction,
               bool contract_over_rows,
               bool add,
-              int normal_dir,
+              int  normal_dir,
               bool one_line = false>
     static void
     apply(const Number2 *DEAL_II_RESTRICT shape_data,
@@ -2473,7 +2475,7 @@ namespace internal
               bool add,
               int  max_derivative,
               bool lex_faces = false,
-              int normal_direction>
+              int  normal_direction>
     void
     apply_face(const Number *DEAL_II_RESTRICT in,
                Number *DEAL_II_RESTRICT       out) const;
@@ -2488,10 +2490,10 @@ namespace internal
             int n_columns,
             typename Number,
             typename Number2>
-  template <int direction,
-            bool contract_over_rows, 
-            bool add, 
-            int normal_dir, 
+  template <int  direction,
+            bool contract_over_rows,
+            bool add,
+            int  normal_dir,
             bool one_line>
   inline void
   EvaluatorTensorProduct<evaluate_raviart_thomas,
@@ -2520,13 +2522,15 @@ namespace internal
     constexpr int stride    = Utilities::pow(n_columns, direction);
     constexpr int n_blocks1 = one_line ? 1 : stride;
 
-    // The number of blocks depend on both direction and dimension. 
-    constexpr int n_blocks2 = (dim - direction - 1 == 0) ? 1 :
-      ( (direction == normal_dir) ? Utilities::pow((n_rows - 1), (direction >= dim) ? 0 : dim - direction - 1) : 
-          ( ( (direction < normal_dir) ? (n_rows + 1) : n_rows) *
-              ( (dim - direction == 3) ? n_rows : 1) 
-          ) 
-      );
+    // The number of blocks depend on both direction and dimension.
+    constexpr int n_blocks2 =
+      (dim - direction - 1 == 0) ?
+        1 :
+        ((direction == normal_dir) ?
+           Utilities::pow((n_rows - 1),
+                          (direction >= dim) ? 0 : dim - direction - 1) :
+           (((direction < normal_dir) ? (n_rows + 1) : n_rows) *
+            ((dim - direction == 3) ? n_rows : 1)));
 
     for (int i2 = 0; i2 < n_blocks2; ++i2)
       {
@@ -2586,7 +2590,7 @@ namespace internal
             bool add,
             int  max_derivative,
             bool lex_faces,
-            int normal_direction>
+            int  normal_direction>
   inline void
   EvaluatorTensorProduct<evaluate_raviart_thomas,
                          dim,
@@ -2594,46 +2598,50 @@ namespace internal
                          n_columns,
                          Number,
                          Number2>::apply_face(const Number *DEAL_II_RESTRICT in,
-                                                    Number *DEAL_II_RESTRICT out) const
+                                              Number *DEAL_II_RESTRICT
+                                                out) const
   {
     Assert(dim > 1 && (lex_faces || dim < 4),
            ExcMessage("Only dim=2,3 supported"));
     static_assert(max_derivative >= 0 && max_derivative < 3,
                   "Only derivative orders 0-2 implemented");
     static_assert(!lex_faces,
-            "lex_faces = True is not implemented for Raviart-Thomas");
+                  "lex_faces = True is not implemented for Raviart-Thomas");
     Assert(shape_values != nullptr,
            ExcMessage(
              "The given array shape_values must not be the null pointer."));
 
     // Determine the number of blocks depending on the face and normaldirection,
-    // as well as dimension. 
-    constexpr int n_blocks1 = 
-                  (face_direction == normal_direction) ? (n_rows - 1) : 
-                    ((face_direction == 0 && normal_direction == 2) ||
-                     (face_direction == 1 && normal_direction == 2) ||
-                     (face_direction == 2 && normal_direction == 1)   ) ? n_rows : (n_rows + 1);
-    constexpr int n_blocks2 = 
-                  (dim == 2) ? 1 : 
-                    ((face_direction == normal_direction) ? (n_rows - 1) : 
-                      (
-                        ((face_direction == 0 && normal_direction == 1) ||
-                         (face_direction == 1 && normal_direction == 0) ||
-                         (face_direction == 2 && normal_direction == 0)) ? n_rows : (n_rows + 1)
-                      )
-                    );
+    // as well as dimension.
+    constexpr int n_blocks1 = (face_direction == normal_direction) ?
+                                (n_rows - 1) :
+                              ((face_direction == 0 && normal_direction == 2) ||
+                               (face_direction == 1 && normal_direction == 2) ||
+                               (face_direction == 2 && normal_direction == 1)) ?
+                                n_rows :
+                                (n_rows + 1);
+    constexpr int n_blocks2 =
+      (dim == 2) ? 1 :
+                   ((face_direction == normal_direction) ?
+                      (n_rows - 1) :
+                      (((face_direction == 0 && normal_direction == 1) ||
+                        (face_direction == 1 && normal_direction == 0) ||
+                        (face_direction == 2 && normal_direction == 0)) ?
+                         n_rows :
+                         (n_rows + 1)));
 
     AssertIndexRange(face_direction, dim);
 
-    constexpr int stride = (face_direction == normal_direction) ? 
-              Utilities::pow(n_rows-1, face_direction) : 
-              ((face_direction == 0 ) ? 1 : 
-                ((face_direction == 2) ? n_rows*(n_rows + 1) :
-                  ((face_direction == 1 && normal_direction == 0) ? (n_rows + 1) :
-                    n_rows)
-                )
-              );
-    constexpr int out_stride = n_blocks1*n_blocks2;
+    constexpr int stride =
+      (face_direction == normal_direction) ?
+        Utilities::pow(n_rows - 1, face_direction) :
+        ((face_direction == 0) ?
+           1 :
+           ((face_direction == 2) ?
+              n_rows * (n_rows + 1) :
+              ((face_direction == 1 && normal_direction == 0) ? (n_rows + 1) :
+                                                                n_rows)));
+    constexpr int out_stride = n_blocks1 * n_blocks2;
 
     const Number *DEAL_II_RESTRICT shape_values = this->shape_values;
 
@@ -2719,25 +2727,27 @@ namespace internal
                   // product. Need to take that into account.
                   if (dim == 3)
                     {
-                      if (normal_direction == 0){
-                        if (contract_onto_face)
-                          out += n_rows - 1;
-                        else
-                          in += n_rows - 1;
-                      }
-                      if (normal_direction == 1){
-                        if (contract_onto_face)
-                          out += n_rows - 2;
-                        else
-                          in += n_rows - 2;
-                      }
-                      if (normal_direction == 2){
-                        if (contract_onto_face)
-                          out += n_rows;
-                        else
-                          in += n_rows;
-                      }
-                      
+                      if (normal_direction == 0)
+                        {
+                          if (contract_onto_face)
+                            out += n_rows - 1;
+                          else
+                            in += n_rows - 1;
+                        }
+                      if (normal_direction == 1)
+                        {
+                          if (contract_onto_face)
+                            out += n_rows - 2;
+                          else
+                            in += n_rows - 2;
+                        }
+                      if (normal_direction == 2)
+                        {
+                          if (contract_onto_face)
+                            out += n_rows;
+                          else
+                            in += n_rows;
+                        }
                     }
                   break;
 
@@ -2755,33 +2765,39 @@ namespace internal
             // adjust for local coordinate system zx
             if (contract_onto_face)
               {
-                if (normal_direction == 0){
-                  in += (n_rows + 1) * (n_rows - 1);
-                  out -= n_rows * (n_rows + 1) - 1;
-                }
-                if (normal_direction == 1){
-                  in += (n_rows - 1) * (n_rows - 1);
-                  out -= (n_rows - 1) * (n_rows - 1) - 1;
-                }
-                if (normal_direction == 2){
-                  in += (n_rows - 1) * (n_rows);
-                  out -= (n_rows) * (n_rows + 1) - 1;
-                }
+                if (normal_direction == 0)
+                  {
+                    in += (n_rows + 1) * (n_rows - 1);
+                    out -= n_rows * (n_rows + 1) - 1;
+                  }
+                if (normal_direction == 1)
+                  {
+                    in += (n_rows - 1) * (n_rows - 1);
+                    out -= (n_rows - 1) * (n_rows - 1) - 1;
+                  }
+                if (normal_direction == 2)
+                  {
+                    in += (n_rows - 1) * (n_rows);
+                    out -= (n_rows) * (n_rows + 1) - 1;
+                  }
               }
             else
               {
-                if (normal_direction == 0){
-                  out += (n_rows + 1) * (n_rows - 1);
-                  in -= n_rows * (n_rows + 1) - 1;
-                }
-                if (normal_direction == 1){
-                  out += (n_rows - 1) * (n_rows - 1);
-                  in -= (n_rows - 1) * (n_rows - 1) - 1;
-                }
-                if (normal_direction == 2){
-                  out += (n_rows - 1) * (n_rows);
-                  in -= (n_rows) * (n_rows + 1) - 1;
-                }
+                if (normal_direction == 0)
+                  {
+                    out += (n_rows + 1) * (n_rows - 1);
+                    in -= n_rows * (n_rows + 1) - 1;
+                  }
+                if (normal_direction == 1)
+                  {
+                    out += (n_rows - 1) * (n_rows - 1);
+                    in -= (n_rows - 1) * (n_rows - 1) - 1;
+                  }
+                if (normal_direction == 2)
+                  {
+                    out += (n_rows - 1) * (n_rows);
+                    in -= (n_rows) * (n_rows + 1) - 1;
+                  }
               }
           }
       }

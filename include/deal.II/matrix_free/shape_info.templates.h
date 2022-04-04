@@ -33,11 +33,11 @@
 #include <deal.II/fe/fe_pyramid_p.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_dg0.h>
+#include <deal.II/fe/fe_raviart_thomas.h>
 #include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_simplex_p_bubbles.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_wedge_p.h>
-#include <deal.II/fe/fe_raviart_thomas.h>
 
 #include <deal.II/grid/reference_cell.h>
 
@@ -171,50 +171,60 @@ namespace internal
         }
     }
 
-    // TODO. This should be implemented into get_element_type_specific_information()
-    // and in the FE and not stand alone here. 
-    template<int dim>
-    std::vector<unsigned int> 
+    // TODO. This should be implemented into
+    // get_element_type_specific_information() and in the FE and not stand alone
+    // here.
+    template <int dim>
+    std::vector<unsigned int>
     get_lexicographic_numbering_raviart_thomas(const unsigned int degree,
-                                               const unsigned int n_dofs_face){
-  
+                                               const unsigned int n_dofs_face)
+    {
       std::vector<unsigned int> lexicographic_numbering;
-      // component 1   
-      for (unsigned int j = 0; j < n_dofs_face; j++){
-        lexicographic_numbering.push_back(j);
-        for (unsigned int i = n_dofs_face*2*dim;
-            i < n_dofs_face*2*dim + degree - 1; i++)
-          lexicographic_numbering.push_back(i + j*(degree - 1));
-        lexicographic_numbering.push_back(n_dofs_face + j);
-      }
-
-      // component 2 
-      unsigned int layers = (dim==3) ? degree : 1;
-      for (unsigned int k = 0; k < layers; k++){
-        unsigned int k_add = k*degree;
-        for (unsigned int j = n_dofs_face*2; j < n_dofs_face*2 + degree; j++)
-          lexicographic_numbering.push_back(j+k_add);
-
-        for (unsigned int i = n_dofs_face*( 2*dim + (degree - 1) );
-              i < n_dofs_face*( 2*dim + (degree - 1)) + (degree - 1)*degree;
-              i++){
-          lexicographic_numbering.push_back(i + k_add*(degree-1));
+      // component 1
+      for (unsigned int j = 0; j < n_dofs_face; j++)
+        {
+          lexicographic_numbering.push_back(j);
+          for (unsigned int i = n_dofs_face * 2 * dim;
+               i < n_dofs_face * 2 * dim + degree - 1;
+               i++)
+            lexicographic_numbering.push_back(i + j * (degree - 1));
+          lexicographic_numbering.push_back(n_dofs_face + j);
         }
-        for (unsigned int j = n_dofs_face*3; j < n_dofs_face*3 + degree; j++)
-          lexicographic_numbering.push_back(j+k_add);
-      }  
+
+      // component 2
+      unsigned int layers = (dim == 3) ? degree : 1;
+      for (unsigned int k = 0; k < layers; k++)
+        {
+          unsigned int k_add = k * degree;
+          for (unsigned int j = n_dofs_face * 2; j < n_dofs_face * 2 + degree;
+               j++)
+            lexicographic_numbering.push_back(j + k_add);
+
+          for (unsigned int i = n_dofs_face * (2 * dim + (degree - 1));
+               i <
+               n_dofs_face * (2 * dim + (degree - 1)) + (degree - 1) * degree;
+               i++)
+            {
+              lexicographic_numbering.push_back(i + k_add * (degree - 1));
+            }
+          for (unsigned int j = n_dofs_face * 3; j < n_dofs_face * 3 + degree;
+               j++)
+            lexicographic_numbering.push_back(j + k_add);
+        }
 
       // component 3
-      if (dim == 3){
-        for (unsigned int i = 4*n_dofs_face; i < 5*n_dofs_face; i++)
-          lexicographic_numbering.push_back(i);
-        for (unsigned int i = 6*n_dofs_face + n_dofs_face*2*(degree - 1);
-            i < 6*n_dofs_face + n_dofs_face*3*(degree - 1); 
-            i++)
-          lexicographic_numbering.push_back(i);
-        for (unsigned int i = 5*n_dofs_face; i < 6*n_dofs_face; i++)
-          lexicographic_numbering.push_back(i);
-      }
+      if (dim == 3)
+        {
+          for (unsigned int i = 4 * n_dofs_face; i < 5 * n_dofs_face; i++)
+            lexicographic_numbering.push_back(i);
+          for (unsigned int i =
+                 6 * n_dofs_face + n_dofs_face * 2 * (degree - 1);
+               i < 6 * n_dofs_face + n_dofs_face * 3 * (degree - 1);
+               i++)
+            lexicographic_numbering.push_back(i);
+          for (unsigned int i = 5 * n_dofs_face; i < 6 * n_dofs_face; i++)
+            lexicographic_numbering.push_back(i);
+        }
 
       return lexicographic_numbering;
     }
@@ -288,151 +298,167 @@ namespace internal
       static_assert(dim == spacedim,
                     "Currently, only the case dim=spacedim is implemented");
 
-      // ShapeInfo for RT elements. Here, data is of size 2 instead of 1. 
-      // data[0] is univariate_shape_data in normal direction and 
+      // ShapeInfo for RT elements. Here, data is of size 2 instead of 1.
+      // data[0] is univariate_shape_data in normal direction and
       // data[1] is univariate_shape_data in tangential direction
       //
       if (dynamic_cast<const FE_RaviartThomasNodal<dim> *>(
-          &fe_in.base_element(base_element_number))){
-        
-        element_type = tensor_raviart_thomas;
+            &fe_in.base_element(base_element_number)))
+        {
+          element_type = tensor_raviart_thomas;
 
-        const auto quad = quad_in.get_tensor_basis()[0];
+          const auto quad = quad_in.get_tensor_basis()[0];
 
-        const FiniteElement<dim> &fe = fe_in.base_element(base_element_number);
-        n_dimensions                 = dim;
-        n_components                 = fe_in.n_components();
+          const FiniteElement<dim> &fe =
+            fe_in.base_element(base_element_number);
+          n_dimensions = dim;
+          n_components = fe_in.n_components();
 
-        data.resize(2);
-        
-        // data_access.reinit(n_dimensions, n_components); // what are these?
-        // data_access.fill(&univariate_shape_data);
+          data.resize(2);
 
-        if ((fe.n_dofs_per_cell() == 0) || (quad.size() == 0))
+          // data_access.reinit(n_dimensions, n_components); // what are these?
+          // data_access.fill(&univariate_shape_data);
+
+          if ((fe.n_dofs_per_cell() == 0) || (quad.size() == 0))
             return; // When do we want to check this?
 
-        const unsigned int n_q_points_1d = quad.size();
+          const unsigned int n_q_points_1d = quad.size();
 
-        n_q_points = Utilities::fixed_power<dim>(n_q_points_1d);
-        n_q_points_face = Utilities::fixed_power<dim - 1>(n_q_points_1d);
+          n_q_points      = Utilities::fixed_power<dim>(n_q_points_1d);
+          n_q_points_face = Utilities::fixed_power<dim - 1>(n_q_points_1d);
 
-        dofs_per_component_on_cell = fe_in.n_dofs_per_cell() / n_components;
+          dofs_per_component_on_cell = fe_in.n_dofs_per_cell() / n_components;
 
-        // NOTE dofs_per_component_on_face is in tangential direction! 
-        dofs_per_component_on_face = fe_in.n_dofs_per_face() + 
-                              Utilities::pow(fe_in.degree, dim-2); 
-        const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
+          // NOTE dofs_per_component_on_face is in tangential direction!
+          dofs_per_component_on_face =
+            fe_in.n_dofs_per_face() + Utilities::pow(fe_in.degree, dim - 2);
+          const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
 
-        lexicographic_numbering = 
-          get_lexicographic_numbering_raviart_thomas<dim>(fe_in.degree, 
-                                                          fe_in.n_dofs_per_face());
+          lexicographic_numbering =
+            get_lexicographic_numbering_raviart_thomas<dim>(
+              fe_in.degree, fe_in.n_dofs_per_face());
 
-        // To get the right shape_values of the RT element
-        std::vector<unsigned int> lex_normal, lex_tangent;
-        for (unsigned int i = 0; i < fe.degree; i++)
-          lex_tangent.push_back(i);
+          // To get the right shape_values of the RT element
+          std::vector<unsigned int> lex_normal, lex_tangent;
+          for (unsigned int i = 0; i < fe.degree; i++)
+            lex_tangent.push_back(i);
 
-        lex_normal.push_back(0);
-        for (unsigned int i = dofs_per_face_normal*2*dim;
-            i < dofs_per_face_normal*2*dim + fe.degree - 1; i++)
-          lex_normal.push_back(i);
-        lex_normal.push_back(dofs_per_face_normal);
-        
-        for (unsigned int comp = 0; comp < 2; comp++){
-          UnivariateShapeData<Number> &univariate_shape_data = 
-            (comp == 0) ? data.front() : data.back();
+          lex_normal.push_back(0);
+          for (unsigned int i = dofs_per_face_normal * 2 * dim;
+               i < dofs_per_face_normal * 2 * dim + fe.degree - 1;
+               i++)
+            lex_normal.push_back(i);
+          lex_normal.push_back(dofs_per_face_normal);
 
-          univariate_shape_data.element_type = tensor_raviart_thomas;
-
-          univariate_shape_data.quadrature = quad; 
-          univariate_shape_data.fe_degree = fe.degree - comp;
-          univariate_shape_data.n_q_points_1d = n_q_points_1d;
-
-          // grant write access to common univariate shape data
-          auto &shape_values    = univariate_shape_data.shape_values;
-          auto &shape_gradients = univariate_shape_data.shape_gradients;
-          auto &shape_hessians  = univariate_shape_data.shape_hessians;
-
-          auto &values_within_subface = univariate_shape_data.values_within_subface;
-          auto &gradients_within_subface = univariate_shape_data.gradients_within_subface;
-          auto &hessians_within_subface = univariate_shape_data.hessians_within_subface;
-
-          auto &shape_data_on_face  = univariate_shape_data.shape_data_on_face;
-
-          const unsigned int n_dofs_1d = fe.degree + 1 - comp; 
-          const unsigned int array_size = n_dofs_1d * n_q_points_1d;
-
-          shape_gradients.resize_fast(array_size);
-          shape_values.resize_fast(array_size);
-          shape_hessians.resize_fast(array_size);
-
-          values_within_subface[0].resize(array_size);
-          values_within_subface[1].resize(array_size);
-          gradients_within_subface[0].resize(array_size);
-          gradients_within_subface[1].resize(array_size);
-          hessians_within_subface[0].resize(array_size);
-          hessians_within_subface[1].resize(array_size);
-
-          shape_data_on_face[0].resize(3 * n_dofs_1d);
-          shape_data_on_face[1].resize(3 * n_dofs_1d);
-
-          
-          
-          Point<dim> unit_point; // Origo
-          for (unsigned int i = 0; i < n_dofs_1d; ++i)
-          {
-            // need to reorder from hierarchical to lexicographic to get the
-            // DoFs correct
-            const unsigned int my_i = (comp == 0) ? lex_normal[i] : lex_tangent[i];
-            for (unsigned int q = 0; q < n_q_points_1d; ++q)
+          for (unsigned int comp = 0; comp < 2; comp++)
             {
-              Point<dim> q_point = unit_point;
-              q_point[comp]         = quad.get_points()[q][0];
+              UnivariateShapeData<Number> &univariate_shape_data =
+                (comp == 0) ? data.front() : data.back();
 
-              shape_values[i * n_q_points_1d + q] =
-                fe.shape_value_component(my_i, q_point, 0);
-              shape_gradients[i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[comp];
-              shape_hessians[i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+              univariate_shape_data.element_type = tensor_raviart_thomas;
 
-              // evaluate basis functions on the two 1D subfaces (i.e., at the
-              // positions divided by one half and shifted by one half,
-              // respectively) for hanging nodes 
-              q_point[comp] *= 0.5;
-              values_within_subface[0][i * n_q_points_1d + q] =
-                fe.shape_value_component(my_i, q_point, 0);
-              gradients_within_subface[0][i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[comp];
-              hessians_within_subface[0][i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
-              q_point[comp] += 0.5;
-              values_within_subface[1][i * n_q_points_1d + q] =
-                fe.shape_value_component(my_i, q_point, 0);
-              gradients_within_subface[1][i * n_q_points_1d + q] =
-                fe.shape_grad_component(my_i, q_point, 0)[comp];
-              hessians_within_subface[1][i * n_q_points_1d + q] =
-                fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+              univariate_shape_data.quadrature    = quad;
+              univariate_shape_data.fe_degree     = fe.degree - comp;
+              univariate_shape_data.n_q_points_1d = n_q_points_1d;
+
+              // grant write access to common univariate shape data
+              auto &shape_values    = univariate_shape_data.shape_values;
+              auto &shape_gradients = univariate_shape_data.shape_gradients;
+              auto &shape_hessians  = univariate_shape_data.shape_hessians;
+
+              auto &values_within_subface =
+                univariate_shape_data.values_within_subface;
+              auto &gradients_within_subface =
+                univariate_shape_data.gradients_within_subface;
+              auto &hessians_within_subface =
+                univariate_shape_data.hessians_within_subface;
+
+              auto &shape_data_on_face =
+                univariate_shape_data.shape_data_on_face;
+
+              const unsigned int n_dofs_1d  = fe.degree + 1 - comp;
+              const unsigned int array_size = n_dofs_1d * n_q_points_1d;
+
+              shape_gradients.resize_fast(array_size);
+              shape_values.resize_fast(array_size);
+              shape_hessians.resize_fast(array_size);
+
+              values_within_subface[0].resize(array_size);
+              values_within_subface[1].resize(array_size);
+              gradients_within_subface[0].resize(array_size);
+              gradients_within_subface[1].resize(array_size);
+              hessians_within_subface[0].resize(array_size);
+              hessians_within_subface[1].resize(array_size);
+
+              shape_data_on_face[0].resize(3 * n_dofs_1d);
+              shape_data_on_face[1].resize(3 * n_dofs_1d);
+
+
+
+              Point<dim> unit_point; // Origo
+              for (unsigned int i = 0; i < n_dofs_1d; ++i)
+                {
+                  // need to reorder from hierarchical to lexicographic to get
+                  // the DoFs correct
+                  const unsigned int my_i =
+                    (comp == 0) ? lex_normal[i] : lex_tangent[i];
+                  for (unsigned int q = 0; q < n_q_points_1d; ++q)
+                    {
+                      Point<dim> q_point = unit_point;
+                      q_point[comp]      = quad.get_points()[q][0];
+
+                      shape_values[i * n_q_points_1d + q] =
+                        fe.shape_value_component(my_i, q_point, 0);
+                      shape_gradients[i * n_q_points_1d + q] =
+                        fe.shape_grad_component(my_i, q_point, 0)[comp];
+                      shape_hessians[i * n_q_points_1d + q] =
+                        fe.shape_grad_grad_component(my_i,
+                                                     q_point,
+                                                     0)[comp][comp];
+
+                      // evaluate basis functions on the two 1D subfaces (i.e.,
+                      // at the positions divided by one half and shifted by one
+                      // half, respectively) for hanging nodes
+                      q_point[comp] *= 0.5;
+                      values_within_subface[0][i * n_q_points_1d + q] =
+                        fe.shape_value_component(my_i, q_point, 0);
+                      gradients_within_subface[0][i * n_q_points_1d + q] =
+                        fe.shape_grad_component(my_i, q_point, 0)[comp];
+                      hessians_within_subface[0][i * n_q_points_1d + q] =
+                        fe.shape_grad_grad_component(my_i,
+                                                     q_point,
+                                                     0)[comp][comp];
+                      q_point[comp] += 0.5;
+                      values_within_subface[1][i * n_q_points_1d + q] =
+                        fe.shape_value_component(my_i, q_point, 0);
+                      gradients_within_subface[1][i * n_q_points_1d + q] =
+                        fe.shape_grad_component(my_i, q_point, 0)[comp];
+                      hessians_within_subface[1][i * n_q_points_1d + q] =
+                        fe.shape_grad_grad_component(my_i,
+                                                     q_point,
+                                                     0)[comp][comp];
+                    }
+                  // evaluate basis functions on the 1D faces, i.e., in zero and
+                  // one
+                  Point<dim> q_point = unit_point;
+                  q_point[comp]      = 0;
+                  shape_data_on_face[0][i] =
+                    fe.shape_value_component(my_i, q_point, 0);
+                  shape_data_on_face[0][i + n_dofs_1d] =
+                    fe.shape_grad_component(my_i, q_point, 0)[comp];
+                  shape_data_on_face[0][i + 2 * n_dofs_1d] =
+                    fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+                  q_point[comp] = 1;
+                  shape_data_on_face[1][i] =
+                    fe.shape_value_component(my_i, q_point, 0);
+                  shape_data_on_face[1][i + n_dofs_1d] =
+                    fe.shape_grad_component(my_i, q_point, 0)[comp];
+                  shape_data_on_face[1][i + 2 * n_dofs_1d] =
+                    fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
+                }
             }
-            // evaluate basis functions on the 1D faces, i.e., in zero and one
-            Point<dim> q_point       = unit_point;
-            q_point[comp]            = 0;
-            shape_data_on_face[0][i] = fe.shape_value_component(my_i, q_point, 0);
-            shape_data_on_face[0][i + n_dofs_1d] =
-              fe.shape_grad_component(my_i, q_point, 0)[comp];
-            shape_data_on_face[0][i + 2 * n_dofs_1d] =
-              fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
-            q_point[comp] = 1; 
-            shape_data_on_face[1][i] = fe.shape_value_component(my_i, q_point, 0);
-            shape_data_on_face[1][i + n_dofs_1d] =
-              fe.shape_grad_component(my_i, q_point, 0)[comp];
-            shape_data_on_face[1][i + 2 * n_dofs_1d] =
-              fe.shape_grad_grad_component(my_i, q_point, 0)[comp][comp];
-          }
-
+          return;
         }
-        return;
-      }
 
       if (quad_in.is_tensor_product() == false ||
           dynamic_cast<const FE_SimplexP<dim> *>(
