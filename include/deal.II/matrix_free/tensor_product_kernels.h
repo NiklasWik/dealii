@@ -65,8 +65,8 @@ namespace internal
      */
     evaluate_symmetric_hierarchical,
     /**
-     * Raviart-Thomas elements with anisotropic polynomials
-     **/
+     * Raviart-Thomas elements with anisotropic polynomials.
+     */
     evaluate_raviart_thomas
   };
 
@@ -2333,8 +2333,10 @@ namespace internal
 
 
   /**
-   * Internal evaluator for shape function in arbitrary dimension using the
-   * tensor product form of the basis functions.
+   * Internal evaluator for shape function in 2D and 3D using the
+   * tensor product form of the anisotropic basis functions of the 
+   * raviart-thomas element, with degree k+1 in normal direction and
+   * k in tangential direction. 
    *
    * @tparam dim Space dimension in which this class is applied
    * @tparam n_rows Number of rows in the transformation matrix, which corresponds
@@ -2362,7 +2364,7 @@ namespace internal
                                 Number2>
   {
     static constexpr unsigned int n_rows_of_product =
-      Utilities::pow(n_rows, dim); // WRONG!
+      Utilities::pow(n_rows, dim - 1) * (n_rows + 1); 
     static constexpr unsigned int n_columns_of_product =
       Utilities::pow(n_columns, dim);
 
@@ -2448,8 +2450,9 @@ namespace internal
      *                            array, otherwise it sums over the columns
      * @tparam add If true, the result is added to the output vector, else
      *             the computed values overwrite the content in the output
-     * @tparam normal_dir Indicates in which direction the normal is, e.g
-     *                    0 if the normal is in x-direction, 1 if in y-direction
+     * @tparam normal_dir Indicates the direction of the continuous component of the
+     *                    RT space in terms of the normal onto the face, e.g
+     *                    0 if the  is in x-direction, 1 if in y-direction
      *                    etc.
      * @tparam one_line If true, the kernel is only applied along a single 1D
      *                  stripe within a dim-dimensional tensor, not the full
