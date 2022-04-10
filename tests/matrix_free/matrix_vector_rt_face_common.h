@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (C) 2011 - 2020 by the deal.II authors
+// Copyright (C) 2022 by the deal.II authors
 //
 // This file is part of the deal.II library.
 //
@@ -13,6 +13,14 @@
 //
 // ---------------------------------------------------------------------
 
+
+// This test template evaluates a simple operator on FE_PolyTensor
+// elements using FEFaceEvaluation and compares the result with the output
+// of FEFaceValues (which is considered to be the reference) on cartesian
+// meshes without hanging nodes. (It will be extended to also handle general
+// meshes and hanging nodes in the future.) The test do not include
+// multithreading because FEFaceValues is not thread-safe.
+// See matrix_vector_rt_face_01.cc for an example that uses this template.
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -75,19 +83,21 @@ public:
   {}
 
   void
-  operator()(const MatrixFree<dim, Number> &              data,
-             Vector<Number> &                             dst,
-             const Vector<Number> &                       src,
-             const std::pair<unsigned int, unsigned int> &face_range) const
+  operator_face(const MatrixFree<dim, Number> &              data,
+                Vector<Number> &                             dst,
+                const Vector<Number> &                       src,
+                const std::pair<unsigned int, unsigned int> &face_range) const
   {
     FEFaceEvaluation<dim, fe_degree, n_q_points_1d, dim, Number> fe_eval(data,
                                                                          true);
     FEFaceEvaluation<dim, fe_degree, n_q_points_1d, dim, Number> fe_eval_n(
       data, false);
 
-    unsigned int n_cells =
+    // Note that this will need to be modified once the Piola transform is
+    // implemented
+    const unsigned int n_cells =
       data.get_dof_handler().get_triangulation().n_active_cells();
-    Number piola =
+    const Number piola =
       (dim == 2) ? n_cells : Utilities::pow((int)std::cbrt(n_cells), 4);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
@@ -132,11 +142,11 @@ public:
     FEFaceEvaluation<dim, fe_degree, n_q_points_1d, dim, Number> fe_eval(data,
                                                                          true);
 
-    // OBS! This will need to be modified once the Piola transform is
+    // Note that this will need to be modified once the Piola transform is
     // implemented
-    unsigned int n_cells =
+    const unsigned int n_cells =
       data.get_dof_handler().get_triangulation().n_active_cells();
-    Number piola =
+    const Number piola =
       (dim == 2) ? n_cells : Utilities::pow((int)std::cbrt(n_cells), 4);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
@@ -163,7 +173,7 @@ public:
   test_functions(Vector<Number> &dst, const Vector<Number> &src) const
   {
     data.loop(&MatrixFreeTest::dummy,
-              &MatrixFreeTest::operator(),
+              &MatrixFreeTest::operator_face,
               &MatrixFreeTest::operator_boundary,
               this,
               dst,
@@ -295,7 +305,7 @@ main()
     deallog.pop();
     deallog.push("3d");
     test<3, 2>();
-    // test<3, 3>(); Takes way too long
+    // test<3, 3>(); //Takes way too long
     deallog.pop();
   }
 }
