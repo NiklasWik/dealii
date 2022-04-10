@@ -13,8 +13,8 @@
 //
 // ---------------------------------------------------------------------
 
-// This function tests the correctness of the matrix-free implementation 
-// of the FE_RaviartThomasNodal element by evaluating a simple fe operator 
+// This function tests the correctness of the matrix-free implementation
+// of the FE_RaviartThomasNodal element by evaluating a simple fe operator
 // and comparing the result with FEVaules which is considered the
 // reference. The mesh is a hypercube mesh with no hanging nodes and no other
 // constraints

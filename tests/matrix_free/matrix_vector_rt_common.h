@@ -14,11 +14,11 @@
 // ---------------------------------------------------------------------
 
 
-// This test template evaluates a simple operator on FE_PolyTensor 
-// elements using FEEvaluation and compares the result with the output 
-// of FEValues (which is considered to be the reference) on cartesian 
+// This test template evaluates a simple operator on FE_PolyTensor
+// elements using FEEvaluation and compares the result with the output
+// of FEValues (which is considered to be the reference) on cartesian
 // meshes without hanging nodes. (It will be extended to also handle general
-// meshes and hanging nodes in the future.) The test do not include 
+// meshes and hanging nodes in the future.) The test do not include
 // multithreading because FEValues is not thread-safe.
 // See matrix_vector_rt_01.cc for an example that uses this template.
 

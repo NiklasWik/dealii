@@ -334,15 +334,15 @@ namespace internal
   std::vector<unsigned int>
   get_lexicographic_numbering_rt_nodal(const unsigned int degree)
   {
-    const unsigned int n_dofs_face = Utilities::pow(degree, dim - 1);
+    const unsigned int        n_dofs_face = Utilities::pow(degree, dim - 1);
     std::vector<unsigned int> lexicographic_numbering;
     // component 1
     for (unsigned int j = 0; j < n_dofs_face; j++)
       {
         lexicographic_numbering.push_back(j);
         for (unsigned int i = n_dofs_face * 2 * dim;
-              i < n_dofs_face * 2 * dim + degree - 1;
-              i++)
+             i < n_dofs_face * 2 * dim + degree - 1;
+             i++)
           lexicographic_numbering.push_back(i + j * (degree - 1));
         lexicographic_numbering.push_back(n_dofs_face + j);
       }
@@ -353,18 +353,17 @@ namespace internal
       {
         unsigned int k_add = k * degree;
         for (unsigned int j = n_dofs_face * 2; j < n_dofs_face * 2 + degree;
-              j++)
+             j++)
           lexicographic_numbering.push_back(j + k_add);
 
         for (unsigned int i = n_dofs_face * (2 * dim + (degree - 1));
-              i <
-              n_dofs_face * (2 * dim + (degree - 1)) + (degree - 1) * degree;
-              i++)
+             i < n_dofs_face * (2 * dim + (degree - 1)) + (degree - 1) * degree;
+             i++)
           {
             lexicographic_numbering.push_back(i + k_add * (degree - 1));
           }
         for (unsigned int j = n_dofs_face * 3; j < n_dofs_face * 3 + degree;
-              j++)
+             j++)
           lexicographic_numbering.push_back(j + k_add);
       }
 
@@ -373,10 +372,9 @@ namespace internal
       {
         for (unsigned int i = 4 * n_dofs_face; i < 5 * n_dofs_face; i++)
           lexicographic_numbering.push_back(i);
-        for (unsigned int i =
-                6 * n_dofs_face + n_dofs_face * 2 * (degree - 1);
-              i < 6 * n_dofs_face + n_dofs_face * 3 * (degree - 1);
-              i++)
+        for (unsigned int i = 6 * n_dofs_face + n_dofs_face * 2 * (degree - 1);
+             i < 6 * n_dofs_face + n_dofs_face * 3 * (degree - 1);
+             i++)
           lexicographic_numbering.push_back(i);
         for (unsigned int i = 5 * n_dofs_face; i < 6 * n_dofs_face; i++)
           lexicographic_numbering.push_back(i);

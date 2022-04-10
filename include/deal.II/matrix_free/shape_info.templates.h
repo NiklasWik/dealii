@@ -191,7 +191,7 @@ namespace internal
       }
       return FETools::get_fe_by_name<dim_to, dim_to>(fe_name);
     }
-    
+
 
     // ----------------- actual ShapeInfo implementation --------------------
 
@@ -246,7 +246,7 @@ namespace internal
         {
           element_type = tensor_raviart_thomas;
 
-          const auto & quad = quad_in.get_tensor_basis()[0];
+          const auto &quad = quad_in.get_tensor_basis()[0];
 
           const FiniteElement<dim> &fe =
             fe_in.base_element(base_element_number);
@@ -287,7 +287,7 @@ namespace internal
               UnivariateShapeData<Number> &univariate_shape_data =
                 (direction == 0) ? data.front() : data.back();
 
-              univariate_shape_data.element_type = tensor_raviart_thomas;
+              univariate_shape_data.element_type  = tensor_raviart_thomas;
               univariate_shape_data.quadrature    = quad;
               univariate_shape_data.n_q_points_1d = n_q_points_1d;
               univariate_shape_data.fe_degree     = fe.degree - direction;
@@ -334,7 +334,7 @@ namespace internal
                   for (unsigned int q = 0; q < n_q_points_1d; ++q)
                     {
                       Point<dim> q_point = unit_point;
-                      q_point[direction]      = quad.get_points()[q][0];
+                      q_point[direction] = quad.get_points()[q][0];
 
                       shape_values[i * n_q_points_1d + q] =
                         fe.shape_value_component(my_i, q_point, 0);
@@ -370,34 +370,38 @@ namespace internal
                   // evaluate basis functions on the 1D faces, i.e., in zero and
                   // one
                   Point<dim> q_point = unit_point;
-                  q_point[direction]      = 0;
+                  q_point[direction] = 0;
                   shape_data_on_face[0][i] =
                     fe.shape_value_component(my_i, q_point, 0);
                   shape_data_on_face[0][i + n_dofs_1d] =
                     fe.shape_grad_component(my_i, q_point, 0)[direction];
                   shape_data_on_face[0][i + 2 * n_dofs_1d] =
-                    fe.shape_grad_grad_component(my_i, q_point, 0)[direction][direction];
+                    fe.shape_grad_grad_component(my_i,
+                                                 q_point,
+                                                 0)[direction][direction];
                   q_point[direction] = 1;
                   shape_data_on_face[1][i] =
                     fe.shape_value_component(my_i, q_point, 0);
                   shape_data_on_face[1][i + n_dofs_1d] =
                     fe.shape_grad_component(my_i, q_point, 0)[direction];
                   shape_data_on_face[1][i + 2 * n_dofs_1d] =
-                    fe.shape_grad_grad_component(my_i, q_point, 0)[direction][direction];
+                    fe.shape_grad_grad_component(my_i,
+                                                 q_point,
+                                                 0)[direction][direction];
                 }
             }
           return;
         }
 
       else if (quad_in.is_tensor_product() == false ||
-          dynamic_cast<const FE_SimplexP<dim> *>(
-            &fe_in.base_element(base_element_number)) ||
-          dynamic_cast<const FE_SimplexDGP<dim> *>(
-            &fe_in.base_element(base_element_number)) ||
-          dynamic_cast<const FE_WedgeP<dim> *>(
-            &fe_in.base_element(base_element_number)) ||
-          dynamic_cast<const FE_PyramidP<dim> *>(
-            &fe_in.base_element(base_element_number)))
+               dynamic_cast<const FE_SimplexP<dim> *>(
+                 &fe_in.base_element(base_element_number)) ||
+               dynamic_cast<const FE_SimplexDGP<dim> *>(
+                 &fe_in.base_element(base_element_number)) ||
+               dynamic_cast<const FE_WedgeP<dim> *>(
+                 &fe_in.base_element(base_element_number)) ||
+               dynamic_cast<const FE_PyramidP<dim> *>(
+                 &fe_in.base_element(base_element_number)))
         {
           // specialization for arbitrary finite elements and quadrature rules
           // as needed in the context, e.g., of simplices

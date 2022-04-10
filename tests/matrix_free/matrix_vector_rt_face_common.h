@@ -14,11 +14,11 @@
 // ---------------------------------------------------------------------
 
 
-// This test template evaluates a simple operator on FE_PolyTensor 
-// elements using FEFaceEvaluation and compares the result with the output 
-// of FEFaceValues (which is considered to be the reference) on cartesian 
+// This test template evaluates a simple operator on FE_PolyTensor
+// elements using FEFaceEvaluation and compares the result with the output
+// of FEFaceValues (which is considered to be the reference) on cartesian
 // meshes without hanging nodes. (It will be extended to also handle general
-// meshes and hanging nodes in the future.) The test do not include 
+// meshes and hanging nodes in the future.) The test do not include
 // multithreading because FEFaceValues is not thread-safe.
 // See matrix_vector_rt_face_01.cc for an example that uses this template.
 
@@ -84,9 +84,9 @@ public:
 
   void
   operator_face(const MatrixFree<dim, Number> &              data,
-             Vector<Number> &                             dst,
-             const Vector<Number> &                       src,
-             const std::pair<unsigned int, unsigned int> &face_range) const
+                Vector<Number> &                             dst,
+                const Vector<Number> &                       src,
+                const std::pair<unsigned int, unsigned int> &face_range) const
   {
     FEFaceEvaluation<dim, fe_degree, n_q_points_1d, dim, Number> fe_eval(data,
                                                                          true);

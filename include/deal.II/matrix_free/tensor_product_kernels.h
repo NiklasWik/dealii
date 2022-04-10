@@ -198,21 +198,30 @@ namespace internal
       (void)dummy2;
     }
 
-    template <int direction, bool contract_over_rows, bool add>
+    template <int  direction,
+              bool contract_over_rows,
+              bool add,
+              int  normal_dir = 0>
     void
     values(const Number in[], Number out[]) const
     {
       apply<direction, contract_over_rows, add>(shape_values, in, out);
     }
 
-    template <int direction, bool contract_over_rows, bool add>
+    template <int  direction,
+              bool contract_over_rows,
+              bool add,
+              int  normal_dir = 0>
     void
     gradients(const Number in[], Number out[]) const
     {
       apply<direction, contract_over_rows, add>(shape_gradients, in, out);
     }
 
-    template <int direction, bool contract_over_rows, bool add>
+    template <int  direction,
+              bool contract_over_rows,
+              bool add,
+              int  normal_dir = 0>
     void
     hessians(const Number in[], Number out[]) const
     {
@@ -2334,9 +2343,9 @@ namespace internal
 
   /**
    * Internal evaluator for shape function in 2D and 3D using the
-   * tensor product form of the anisotropic basis functions of the 
+   * tensor product form of the anisotropic basis functions of the
    * raviart-thomas element, with degree k+1 in normal direction and
-   * k in tangential direction. 
+   * k in tangential direction.
    *
    * @tparam dim Space dimension in which this class is applied
    * @tparam n_rows Number of rows in the transformation matrix, which corresponds
@@ -2364,7 +2373,7 @@ namespace internal
                                 Number2>
   {
     static constexpr unsigned int n_rows_of_product =
-      Utilities::pow(n_rows, dim - 1) * (n_rows + 1); 
+      Utilities::pow(n_rows, dim - 1) * (n_rows + 1);
     static constexpr unsigned int n_columns_of_product =
       Utilities::pow(n_columns, dim);
 

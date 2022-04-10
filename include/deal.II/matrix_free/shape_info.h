@@ -100,7 +100,7 @@ namespace internal
       tensor_symmetric_plus_dg0 = 5,
 
       /**
-       * Special case of the FE_RaviartThomasNodal element with anisotropic 
+       * Special case of the FE_RaviartThomasNodal element with anisotropic
        * tensor product shape functions, i.e degree (k + 1) in normal direction,
        * and k in tangential direction.
        */
@@ -111,7 +111,7 @@ namespace internal
        */
       tensor_none = 7
 
-      
+
     };
 
 
