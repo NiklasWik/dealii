@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (C) 2011 - 2020 by the deal.II authors
+// Copyright (C) 2022 by the deal.II authors
 //
 // This file is part of the deal.II library.
 //
@@ -14,10 +14,13 @@
 // ---------------------------------------------------------------------
 
 
-// this is a template for getting the function values and comparing them with
-// the output of FEValues on different kinds of meshes (Cartesian, general,
-// with and without hanging nodes). The tests does not include multithreading
-// because FEValues is not thread-safe
+// This test template evaluates a simple operator on FE_PolyTensor
+// elements using FEEvaluation and compares the result with the output
+// of FEValues (which is considered to be the reference) on cartesian
+// meshes without hanging nodes. (It will be extended to also handle general
+// meshes and hanging nodes in the future.) The test do not include
+// multithreading because FEValues is not thread-safe.
+// See matrix_vector_rt_01.cc for an example that uses this template.
 
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/quadrature_lib.h>

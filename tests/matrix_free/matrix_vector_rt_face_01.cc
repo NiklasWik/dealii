@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (C) 2013 - 2020 by the deal.II authors
+// Copyright (C) 2022 by the deal.II authors
 //
 // This file is part of the deal.II library.
 //
@@ -13,6 +13,11 @@
 //
 // ---------------------------------------------------------------------
 
+// This function tests the correctness of the matrix-free implementation
+// of the FE_RaviartThomasNodal element by evaluating a face operator
+// and comparing the result with FEVaules which is considered the
+// reference. The mesh is a hypercube mesh with no hanging nodes and no other
+// constraints
 
 #include "../tests.h"
 
