@@ -2373,9 +2373,9 @@ namespace internal
                                 Number2>
   {
     static constexpr unsigned int n_rows_of_product =
-      Utilities::pow(n_rows, dim - 1) * (n_rows + 1);
+      numbers::invalid_unsigned_int;
     static constexpr unsigned int n_columns_of_product =
-      Utilities::pow(n_columns, dim);
+      numbers::invalid_unsigned_int;
 
     /**
      * Empty constructor. Does nothing. Be careful when using 'values' and
