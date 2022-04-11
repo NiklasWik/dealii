@@ -246,7 +246,7 @@ namespace internal
         {
           element_type = tensor_raviart_thomas;
 
-          const auto &quad = quad_in.get_tensor_basis()[0];
+          const auto quad = quad_in.get_tensor_basis()[0];
 
           const FiniteElement<dim> &fe =
             fe_in.base_element(base_element_number);
