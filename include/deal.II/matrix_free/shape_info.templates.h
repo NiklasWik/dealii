@@ -267,7 +267,7 @@ namespace internal
           const unsigned int dofs_per_face_normal = fe_in.n_dofs_per_face();
 
           lexicographic_numbering =
-            internal::get_lexicographic_numbering_rt_nodal<dim>(fe_in.degree);
+            get_lexicographic_numbering_rt_nodal<dim>(fe_in.degree);
 
           // To get the right shape_values of the RT element
           std::vector<unsigned int> lex_normal, lex_tangent;
