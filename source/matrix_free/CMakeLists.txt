@@ -23,6 +23,10 @@ SET(_src
   evaluation_template_factory_inst4.cc
   evaluation_template_factory_inst5.cc
   evaluation_template_factory_inst6.cc
+  evaluation_template_factory_inst7.cc
+  evaluation_template_factory_inst8.cc
+  evaluation_template_factory_inst9.cc
+  evaluation_template_factory_inst10.cc
   evaluation_template_factory_hanging_nodes.cc
   fe_point_evaluation.cc
   mapping_info.cc
