@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (C) 2020 by the deal.II authors
+// Copyright (C) 2022 by the deal.II authors
 //
 // This file is part of the deal.II library.
 //
@@ -13,16 +13,5 @@
 //
 // ---------------------------------------------------------------------
 
-
-#include <deal.II/matrix_free/evaluation_template_factory.templates.h>
-
-DEAL_II_NAMESPACE_OPEN
-
-#define SPLIT_INSTANTIATIONS_COUNT 10
-#ifndef SPLIT_INSTANTIATIONS_INDEX
-#  define SPLIT_INSTANTIATIONS_INDEX 0
-#endif
-
-#include "evaluation_template_factory.inst"
-
-DEAL_II_NAMESPACE_CLOSE
+#define SPLIT_INSTANTIATIONS_INDEX 6
+#include "evaluation_template_factory.cc"
