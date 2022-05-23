@@ -135,12 +135,12 @@ namespace VectorTools
    *   "nodal" finite element spaces (such as FE_Q, but not
    *   FE_Q_Hierarchical), whereas the projection is always possible.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const Mapping<dim, spacedim> &   mapping,
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        function_map,
     std::map<types::global_dof_index, number> &boundary_values,
     const ComponentMask &component_mask = ComponentMask());
@@ -149,12 +149,12 @@ namespace VectorTools
    * Like the previous function, but take a mapping collection to go with
    * DoFHandler objects with hp-capabilities.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const hp::MappingCollection<dim, spacedim> &mapping,
     const DoFHandler<dim, spacedim> &           dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        function_map,
     std::map<types::global_dof_index, number> &boundary_values,
     const ComponentMask &component_mask = ComponentMask());
@@ -168,13 +168,13 @@ namespace VectorTools
    * @see
    * @ref GlossBoundaryIndicator "Glossary entry on boundary indicators"
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const Mapping<dim, spacedim> &             mapping,
     const DoFHandler<dim, spacedim> &          dof,
     const types::boundary_id                   boundary_component,
-    const Function<spacedim, number> &         boundary_function,
+    const Function<spacedim, number2> &        boundary_function,
     std::map<types::global_dof_index, number> &boundary_values,
     const ComponentMask &component_mask = ComponentMask());
 
@@ -182,13 +182,13 @@ namespace VectorTools
    * Like the previous function, but take a mapping collection to go with
    * DoFHandler objects with hp-capabilities.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const hp::MappingCollection<dim, spacedim> &mapping,
     const DoFHandler<dim, spacedim> &           dof,
     const types::boundary_id                    boundary_component,
-    const Function<spacedim, number> &          boundary_function,
+    const Function<spacedim, number2> &         boundary_function,
     std::map<types::global_dof_index, number> & boundary_values,
     const ComponentMask &component_mask = ComponentMask());
 
@@ -201,12 +201,12 @@ namespace VectorTools
    * @see
    * @ref GlossBoundaryIndicator "Glossary entry on boundary indicators"
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const DoFHandler<dim, spacedim> &          dof,
     const types::boundary_id                   boundary_component,
-    const Function<spacedim, number> &         boundary_function,
+    const Function<spacedim, number2> &        boundary_function,
     std::map<types::global_dof_index, number> &boundary_values,
     const ComponentMask &component_mask = ComponentMask());
 
@@ -217,11 +217,11 @@ namespace VectorTools
    * apply as for the previous function, in particular about the use of the
    * component mask and the requires size of the function object.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        function_map,
     std::map<types::global_dof_index, number> &boundary_values,
     const ComponentMask &component_mask = ComponentMask());
@@ -255,12 +255,12 @@ namespace VectorTools
    *
    * @ingroup constraints
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const Mapping<dim, spacedim> &   mapping,
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                        function_map,
     AffineConstraints<number> &constraints,
     const ComponentMask &      component_mask = ComponentMask());
@@ -269,12 +269,12 @@ namespace VectorTools
    * Like the previous function, but take a mapping collection to go with
    * DoFHandler objects with hp-capabilities.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const hp::MappingCollection<dim, spacedim> &mapping,
     const DoFHandler<dim, spacedim> &           dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                        function_map,
     AffineConstraints<number> &constraints,
     const ComponentMask &      component_mask = ComponentMask());
@@ -290,27 +290,27 @@ namespace VectorTools
    * @see
    * @ref GlossBoundaryIndicator "Glossary entry on boundary indicators"
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
-    const Mapping<dim, spacedim> &    mapping,
-    const DoFHandler<dim, spacedim> & dof,
-    const types::boundary_id          boundary_component,
-    const Function<spacedim, number> &boundary_function,
-    AffineConstraints<number> &       constraints,
-    const ComponentMask &             component_mask = ComponentMask());
+    const Mapping<dim, spacedim> &     mapping,
+    const DoFHandler<dim, spacedim> &  dof,
+    const types::boundary_id           boundary_component,
+    const Function<spacedim, number2> &boundary_function,
+    AffineConstraints<number> &        constraints,
+    const ComponentMask &              component_mask = ComponentMask());
 
   /**
    * Like the previous function, but take a mapping collection to go with
    * DoFHandler objects with hp-capabilities.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const hp::MappingCollection<dim, spacedim> &mapping,
     const DoFHandler<dim, spacedim> &           dof,
     const types::boundary_id                    boundary_component,
-    const Function<spacedim, number> &          boundary_function,
+    const Function<spacedim, number2> &         boundary_function,
     AffineConstraints<number> &                 constraints,
     const ComponentMask &component_mask = ComponentMask());
 
@@ -325,14 +325,14 @@ namespace VectorTools
    * @see
    * @ref GlossBoundaryIndicator "Glossary entry on boundary indicators"
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
-    const DoFHandler<dim, spacedim> & dof,
-    const types::boundary_id          boundary_component,
-    const Function<spacedim, number> &boundary_function,
-    AffineConstraints<number> &       constraints,
-    const ComponentMask &             component_mask = ComponentMask());
+    const DoFHandler<dim, spacedim> &  dof,
+    const types::boundary_id           boundary_component,
+    const Function<spacedim, number2> &boundary_function,
+    AffineConstraints<number> &        constraints,
+    const ComponentMask &              component_mask = ComponentMask());
 
 
   /**
@@ -343,11 +343,11 @@ namespace VectorTools
    *
    * @ingroup constraints
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   interpolate_boundary_values(
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                        function_map,
     AffineConstraints<number> &constraints,
     const ComponentMask &      component_mask = ComponentMask());
@@ -430,12 +430,12 @@ namespace VectorTools
    *   considerations, see the documentation of the first
    *   interpolate_boundary_values() function above.)
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const Mapping<dim, spacedim> &   mapping,
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        boundary_functions,
     const Quadrature<dim - 1> &                q,
     std::map<types::global_dof_index, number> &boundary_values,
@@ -445,11 +445,11 @@ namespace VectorTools
    * Call the project_boundary_values() function, see above, with
    * <tt>mapping=MappingQ@<dim,spacedim@>(1)</tt>.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        boundary_function,
     const Quadrature<dim - 1> &                q,
     std::map<types::global_dof_index, number> &boundary_values,
@@ -458,12 +458,12 @@ namespace VectorTools
   /**
    * Same as above, but with hp-capabilities.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const hp::MappingCollection<dim, spacedim> &mapping,
     const DoFHandler<dim, spacedim> &           dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        boundary_functions,
     const hp::QCollection<dim - 1> &           q,
     std::map<types::global_dof_index, number> &boundary_values,
@@ -473,11 +473,11 @@ namespace VectorTools
    * Call the project_boundary_values() function, see above, with
    * <tt>mapping=MappingQ@<dim,spacedim@>(1)</tt>.
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                                        boundary_function,
     const hp::QCollection<dim - 1> &           q,
     std::map<types::global_dof_index, number> &boundary_values,
@@ -521,12 +521,12 @@ namespace VectorTools
    *
    * @ingroup constraints
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const Mapping<dim, spacedim> &   mapping,
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                        boundary_functions,
     const Quadrature<dim - 1> &q,
     AffineConstraints<number> &constraints,
@@ -538,11 +538,11 @@ namespace VectorTools
    *
    * @ingroup constraints
    */
-  template <int dim, int spacedim, typename number>
+  template <int dim, int spacedim, typename number, typename number2 = number>
   void
   project_boundary_values(
     const DoFHandler<dim, spacedim> &dof,
-    const std::map<types::boundary_id, const Function<spacedim, number> *>
+    const std::map<types::boundary_id, const Function<spacedim, number2> *>
       &                        boundary_function,
     const Quadrature<dim - 1> &q,
     AffineConstraints<number> &constraints,
@@ -718,14 +718,14 @@ namespace VectorTools
    * @see
    * @ref GlossBoundaryIndicator "Glossary entry on boundary indicators"
    */
-  template <int dim>
+  template <int dim, typename Number>
   void
   project_boundary_values_div_conforming(
     const DoFHandler<dim, dim> & dof_handler,
     const unsigned int           first_vector_component,
     const Function<dim, double> &boundary_function,
     const types::boundary_id     boundary_component,
-    AffineConstraints<double> &  constraints,
+    AffineConstraints<Number> &  constraints,
     const Mapping<dim> &         mapping);
 
   /**
